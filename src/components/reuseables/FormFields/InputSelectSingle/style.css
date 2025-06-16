@@ -1,0 +1,29 @@
+:root {
+  --main-ease: cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+
+.cvspan-outlined-select {
+  @apply w-full relative;
+}
+
+/* INPUT */
+.cvspan-outlined-select input {
+  @apply border-none rounded-[8px] w-full h-[48px] outline outline-[#D0D0D0] outline-[1px] p-[12px] text-[#111111];
+  transition: 0.1s var(--main-ease);
+}
+
+/* LABEL */
+.cvspan-outlined-select label {
+  @apply bg-white absolute top-[50%] left-[12px] pointer-events-none translate-y-[-50%] text-[#838383];
+  transition: 0.2s var(--main-ease);
+}
+
+.cvspan-outlined-select input:not(:placeholder-shown) ~ label,
+.cvspan-outlined-select input:focus ~ label {
+  @apply top-0 left-[10px] text-[12px] leading-[16px];
+}
+
+.cvspan-outlined-select input:focus,
+.cvspan-outlined-select input:hover {
+  @apply outline outline-[#D0D0D0] outline-[1px];
+}

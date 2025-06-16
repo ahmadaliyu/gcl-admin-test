@@ -1,0 +1,10 @@
+.notificationContainer {
+    overflow-y: scroll;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+  
+  /* WebKit browsers (Chrome, Safari) */
+  .notificationContainer::-webkit-scrollbar {
+    display: none;
+  }

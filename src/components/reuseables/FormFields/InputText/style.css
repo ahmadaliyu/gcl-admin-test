@@ -1,0 +1,48 @@
+:root {
+  --main-ease: cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+
+.cvspan-outlined-input,
+.cvspan-outlined-textarea {
+  @apply w-full relative;
+}
+
+.cvspan-outlined-textarea {
+  @apply mb-[-6.4px];
+}
+
+/* INPUT */
+.cvspan-outlined-input input,
+.cvspan-outlined-textarea textarea {
+  @apply border-none rounded-[8px] w-full h-[44px] outline outline-[#D0D0D0] outline-[1px] p-[12px] text-[#111111] active:placeholder:text-[#838383] focus:placeholder:text-[#838383] placeholder:text-[#83838300] darkremove:bg-transparent;
+  transition: 0.1s var(--main-ease);
+}
+
+.cvspan-outlined-textarea textarea {
+  @apply h-[140px];
+}
+
+/* LABEL */
+.cvspan-outlined-input label,
+.cvspan-outlined-textarea label {
+  @apply bg-white absolute top-[50%] left-[12px] pointer-events-none translate-y-[-50%] text-[#838383];
+  transition: 0.2s var(--main-ease);
+}
+
+.cvspan-outlined-textarea label {
+  @apply top-[20px];
+}
+
+.cvspan-outlined-input input:not(:placeholder-shown) ~ label,
+.cvspan-outlined-input input:focus ~ label,
+.cvspan-outlined-textarea textarea:not(:placeholder-shown) ~ label,
+.cvspan-outlined-textarea textarea:focus ~ label {
+  @apply top-0 left-[10px] text-[12px] leading-[16px];
+}
+
+.cvspan-outlined-input input:focus,
+.cvspan-outlined-textarea textarea:focus,
+.cvspan-outlined-input input:hover,
+.cvspan-outlined-textarea textarea:hover {
+  @apply outline outline-[#D0D0D0] outline-[1px];
+}

@@ -1,0 +1,19 @@
+.discover-filter-container {
+  /* Selecting scrollbar elements */
+  ::-webkit-scrollbar {
+    height: 0px;
+    width: 0%;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[#11111100] darkremove:bg-[#ffffff];
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply w-full bg-[#e7dede] darkremove:bg-[#4E4E4E];
+  }
+
+  ::-webkit-scrollbar-button {
+    @apply w-full bg-[#4E4E4E];
+  }
+}
