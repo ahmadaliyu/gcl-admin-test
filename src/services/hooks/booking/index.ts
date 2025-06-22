@@ -3,3 +3,7 @@ export * from "./useCreateBooking";
 export * from "./useGetAddresses";
 export * from "./useGetBooking";
 export * from "./useGetBookingsById";
+export * from "./useCreateLabel";
+export * from "./useValidateException";
+export * from "./useCreateException";
+export * from "./useTriggerAdditionalPayment";

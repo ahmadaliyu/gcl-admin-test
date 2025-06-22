@@ -1,18 +1,20 @@
-import React, { Fragment, useState } from 'react';
-import Button from '@/components/reuseables/Button';
-import InputField from '@/components/reuseables/InputField';
-import Link from 'next/link';
-import { EStepIds, steps } from './constants';
-import SelectField from '@/components/reuseables/SelectField';
-import { useAppDispatch, useAppSelector } from '@/store/hook';
-import { useRouter } from 'next/navigation';
-import { useCreateBooking, useGetAddresses } from '@/services';
-import { resetBooking, updateBookingField } from '@/store/booking/bookingSlice';
-import { clearQuotesData } from '@/store/auth/quoteSlice';
-import { clearQuote } from '@/store/auth/quoteDataSlice';
+import React, { Fragment, useState } from "react";
+import Button from "@/components/reuseables/Button";
+import InputField from "@/components/reuseables/InputField";
+import Link from "next/link";
+import { EStepIds, steps } from "./constants";
+import SelectField from "@/components/reuseables/SelectField";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { useRouter } from "next/navigation";
+import { useCreateBooking, useGetAddresses } from "@/services";
+import { resetBooking, updateBookingField } from "@/store/booking/bookingSlice";
+import { clearQuotesData } from "@/store/auth/quoteSlice";
+import { clearQuote } from "@/store/auth/quoteDataSlice";
 
 function WelcomePage() {
-  const [activeStepId, setActiveStepId] = useState<EStepIds>(EStepIds.ReceipientDetails);
+  const [activeStepId, setActiveStepId] = useState<EStepIds>(
+    EStepIds.ReceipientDetails
+  );
   const activeStepIndex = steps.findIndex((step) => step.id === activeStepId);
 
   return (
@@ -21,7 +23,8 @@ function WelcomePage() {
         <div className="flex justify-between items-center max-w-[900px] mx-auto mb-[32px]">
           {steps.map((item, index) => {
             const isLast = steps?.length - 1 === index;
-            const active = activeStepId === item.id || !(activeStepIndex < index);
+            const active =
+              activeStepId === item.id || !(activeStepIndex < index);
 
             return (
               <Fragment key={item.id}>
@@ -30,12 +33,18 @@ function WelcomePage() {
                   onClick={() => setActiveStepId(item?.id)}
                 >
                   {active ? item?.activeIcon : item?.inactiveIcon}
-                  <h2 className={`text-[14px] mt-[8px] ${active ? 'text-black' : 'text-[#757575]'}`}>{item.title}</h2>
+                  <h2
+                    className={`text-[14px] mt-[8px] ${
+                      active ? "text-black" : "text-[#757575]"
+                    }`}
+                  >
+                    {item.title}
+                  </h2>
                 </div>
                 {isLast ? null : (
                   <div
                     className={`flex-1  ${
-                      active ? 'bg-[#E51520]' : 'bg-[#E3E3E3]'
+                      active ? "bg-[#E51520]" : "bg-[#E3E3E3]"
                     } h-[2px] mt-[-25px] mx-[-25px] relative z-[1]`}
                   />
                 )}
@@ -45,9 +54,15 @@ function WelcomePage() {
         </div>
 
         {/* {activeStepId === EStepIds.QuoteReview && <QuoteReview setActiveStepId={setActiveStepId} />} */}
-        {activeStepId === EStepIds.ReceipientDetails && <ReceipientDetails setActiveStepId={setActiveStepId} />}
-        {activeStepId === EStepIds.PackageDetails && <PackageDetails setActiveStepId={setActiveStepId} />}
-        {activeStepId === EStepIds.PreviewFinish && <PreviewFinish setActiveStepId={setActiveStepId} />}
+        {activeStepId === EStepIds.ReceipientDetails && (
+          <ReceipientDetails setActiveStepId={setActiveStepId} />
+        )}
+        {activeStepId === EStepIds.PackageDetails && (
+          <PackageDetails setActiveStepId={setActiveStepId} />
+        )}
+        {activeStepId === EStepIds.PreviewFinish && (
+          <PreviewFinish setActiveStepId={setActiveStepId} />
+        )}
       </div>
     </div>
   );
@@ -94,47 +109,49 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const senderAddresses = data?.data?.filter((addr) => addr.is_sender_address) || [];
-  const recipientAddresses = data?.data?.filter((addr) => !addr.is_sender_address) || [];
+  const senderAddresses =
+    data?.data?.filter((addr) => addr.is_sender_address) || [];
+  const recipientAddresses =
+    data?.data?.filter((addr) => !addr.is_sender_address) || [];
 
   const senderAddressOptions = senderAddresses.map((address) => ({
-    label: address.label || address.address_line_1 || 'Unnamed Address',
+    label: address.label || address.address_line_1 || "Unnamed Address",
     value: address.id,
   }));
 
   const recipientAddressOptions = recipientAddresses.map((address) => ({
-    label: address.label || address.address_line_1 || 'Unnamed Address',
+    label: address.label || address.address_line_1 || "Unnamed Address",
     value: address.id,
   }));
 
   const [senderFormData, setSenderFormData] = useState({
-    address_id: '',
-    address_line_1: '',
-    address_line_2: '',
-    city: '',
-    postcode: '',
-    contact_name: '',
-    contact_email: '',
-    onsite_telephone: '',
-    delivery_note: '',
-    country: '',
-    country_iso: '',
-    type: '',
+    address_id: "",
+    address_line_1: "",
+    address_line_2: "",
+    city: "",
+    postcode: "",
+    contact_name: "",
+    contact_email: "",
+    onsite_telephone: "",
+    delivery_note: "",
+    country: "",
+    country_iso: "",
+    type: "",
   });
 
   const [recipientFormData, setRecipientFormData] = useState({
-    address_id: '',
-    address_line_1: '',
-    address_line_2: '',
-    city: '',
-    postcode: '',
-    contact_name: '',
-    contact_email: '',
-    onsite_telephone: '',
-    delivery_note: '',
-    country: '',
-    country_iso: '',
-    type: '',
+    address_id: "",
+    address_line_1: "",
+    address_line_2: "",
+    city: "",
+    postcode: "",
+    contact_name: "",
+    contact_email: "",
+    onsite_telephone: "",
+    delivery_note: "",
+    country: "",
+    country_iso: "",
+    type: "",
   });
 
   const handleSenderFieldChange = (name: string, value: string) => {
@@ -156,7 +173,7 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
     address_line_2: form.address_line_2,
     country: form.country,
     country_iso: form.country,
-    state: '',
+    state: "",
     city: form.city,
     post_code: form.postcode,
     contact_name: form.contact_name,
@@ -166,26 +183,29 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
     is_sender_address: form === senderFormData ? true : false,
   });
 
-  const handleAddressSelect = (type: 'sender' | 'recipient', addressId: string) => {
-    const source = type === 'sender' ? senderAddresses : recipientAddresses;
+  const handleAddressSelect = (
+    type: "sender" | "recipient",
+    addressId: string
+  ) => {
+    const source = type === "sender" ? senderAddresses : recipientAddresses;
     const selectedAddress = source.find((addr) => addr.id === addressId);
     if (!selectedAddress) return;
 
-    const setter = type === 'sender' ? setSenderFormData : setRecipientFormData;
+    const setter = type === "sender" ? setSenderFormData : setRecipientFormData;
     setter((prev) => ({
       ...prev,
-      address_id: selectedAddress.label || '',
-      address_line_1: selectedAddress.address_line_1 || '',
-      address_line_2: selectedAddress.address_line_2 || '',
-      city: selectedAddress.city || '',
-      postcode: selectedAddress.post_code || '',
-      contact_name: selectedAddress.contact_name || '',
-      contact_email: selectedAddress.contact_email || '',
-      onsite_telephone: selectedAddress.contact_phone || '',
-      delivery_note: selectedAddress.drivers_note || '',
-      country: selectedAddress.country || '',
-      country_iso: selectedAddress.country || '',
-      type: prev.type || '',
+      address_id: selectedAddress.label || "",
+      address_line_1: selectedAddress.address_line_1 || "",
+      address_line_2: selectedAddress.address_line_2 || "",
+      city: selectedAddress.city || "",
+      postcode: selectedAddress.post_code || "",
+      contact_name: selectedAddress.contact_name || "",
+      contact_email: selectedAddress.contact_email || "",
+      onsite_telephone: selectedAddress.contact_phone || "",
+      delivery_note: selectedAddress.drivers_note || "",
+      country: selectedAddress.country || "",
+      country_iso: selectedAddress.country || "",
+      type: prev.type || "",
     }));
   };
 
@@ -216,30 +236,46 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
     form.type.trim();
 
   const handleContinue = () => {
-    dispatch(updateBookingField({ field: 'sender_address', value: getFormattedAddress(senderFormData) }));
-    dispatch(updateBookingField({ field: 'recipient_address', value: getFormattedAddress(recipientFormData) }));
+    dispatch(
+      updateBookingField({
+        field: "sender_address",
+        value: getFormattedAddress(senderFormData),
+      })
+    );
+    dispatch(
+      updateBookingField({
+        field: "recipient_address",
+        value: getFormattedAddress(recipientFormData),
+      })
+    );
     setActiveStepId?.(EStepIds.PackageDetails);
   };
 
-  const handleAddAddress = () => router.push('user/add-address');
+  const handleAddAddress = () => router.push("user/add-address");
 
   return (
     <>
-      <h1 className="text-[#02044A] text-center text-[36px] font-medium">Recipient Details</h1>
-      <p className="text-[#272727] text-center text-[18px] mt-[16px]">We would like to know your address</p>
+      <h1 className="text-[#02044A] text-center text-[36px] font-medium">
+        Recipient Details
+      </h1>
+      <p className="text-[#272727] text-center text-[18px] mt-[16px]">
+        We would like to know your address
+      </p>
 
       <div className="mt-[32px]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-[32px]">
           {/* SENDER DETAILS */}
           <div className="flex flex-col gap-[16px]">
-            <h2 className="text-[#272727] font-bold text-[16px] mb-[8px]">Sender From</h2>
+            <h2 className="text-[#272727] font-bold text-[16px] mb-[8px]">
+              Sender From
+            </h2>
 
             <SelectField
               options={senderAddressOptions}
               label="Select a saved address"
               placeholder="Select an option"
               value={senderFormData.address_id}
-              onChange={(val: string) => handleAddressSelect('sender', val)}
+              onChange={(val: string) => handleAddressSelect("sender", val)}
             />
             <button
               className="w-[200px] text-sm border border-gray-400 text-gray-700 px-4 py-2 rounded"
@@ -252,14 +288,14 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             )} */}
 
             {[
-              { name: 'address_line_1', label: 'Address Line 1 *' },
-              { name: 'address_line_2', label: 'Address Line 2 *' },
-              { name: 'city', label: 'City/Town *' },
-              { name: 'postcode', label: 'Postcode *' },
-              { name: 'onsite_telephone', label: 'On-Site Telephone *' },
-              { name: 'contact_name', label: 'Contact Name *' },
-              { name: 'contact_email', label: 'Contact Email *' },
-              { name: 'delivery_note', label: 'Delivery Driver Note' },
+              { name: "address_line_1", label: "Address Line 1 *" },
+              { name: "address_line_2", label: "Address Line 2 *" },
+              { name: "city", label: "City/Town *" },
+              { name: "postcode", label: "Postcode *" },
+              { name: "onsite_telephone", label: "On-Site Telephone *" },
+              { name: "contact_name", label: "Contact Name *" },
+              { name: "contact_email", label: "Contact Email *" },
+              { name: "delivery_note", label: "Delivery Driver Note" },
             ].map(({ name, label }) => (
               <InputField
                 key={name}
@@ -273,36 +309,40 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             <SelectField
               placeholder="Select an option"
               options={[
-                { label: 'Personal', value: 'Personal' },
-                { label: 'Company', value: 'Company' },
+                { label: "Personal", value: "Personal" },
+                { label: "Company", value: "Company" },
               ]}
               label="Personal or Company *"
               value={senderFormData.type}
-              onChange={(val: string) => handleSenderFieldChange('type', val)}
+              onChange={(val: string) => handleSenderFieldChange("type", val)}
             />
             <SelectField
               placeholder="Select an option"
               options={[
-                { label: 'Nigeria', value: 'Nigeria' },
-                { label: 'United States', value: 'United States' },
-                { label: 'United Kingdom', value: 'United Kingdom' },
+                { label: "Nigeria", value: "Nigeria" },
+                { label: "United States", value: "United States" },
+                { label: "United Kingdom", value: "United Kingdom" },
               ]}
               label="Country *"
               value={senderFormData.country}
-              onChange={(val: string) => handleSenderFieldChange('country', val)}
+              onChange={(val: string) =>
+                handleSenderFieldChange("country", val)
+              }
             />
           </div>
 
           {/* RECIPIENT DETAILS */}
           <div className="flex flex-col gap-[16px]">
-            <h2 className="text-[#272727] font-bold text-[16px] mb-[8px]">Deliver To</h2>
+            <h2 className="text-[#272727] font-bold text-[16px] mb-[8px]">
+              Deliver To
+            </h2>
 
             <SelectField
               options={recipientAddressOptions}
               label="Select a saved address"
               placeholder="Select an option"
               value={recipientFormData.address_id}
-              onChange={(val: string) => handleAddressSelect('recipient', val)}
+              onChange={(val: string) => handleAddressSelect("recipient", val)}
             />
             <button
               className="w-[200px] text-sm border border-gray-400 text-gray-700 px-4 py-2 rounded"
@@ -315,20 +355,22 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             )} */}
 
             {[
-              { name: 'address_line_1', label: 'Address Line 1 *' },
-              { name: 'address_line_2', label: 'Address Line 2 *' },
-              { name: 'city', label: 'City/Town *' },
-              { name: 'postcode', label: 'Postcode *' },
-              { name: 'onsite_telephone', label: 'On-Site Telephone *' },
-              { name: 'contact_name', label: 'Contact Name *' },
-              { name: 'contact_email', label: 'Contact Email *' },
-              { name: 'delivery_note', label: 'Delivery Driver Note' },
+              { name: "address_line_1", label: "Address Line 1 *" },
+              { name: "address_line_2", label: "Address Line 2 *" },
+              { name: "city", label: "City/Town *" },
+              { name: "postcode", label: "Postcode *" },
+              { name: "onsite_telephone", label: "On-Site Telephone *" },
+              { name: "contact_name", label: "Contact Name *" },
+              { name: "contact_email", label: "Contact Email *" },
+              { name: "delivery_note", label: "Delivery Driver Note" },
             ].map(({ name, label }) => (
               <InputField
                 key={name}
                 name={name}
                 label={label}
-                value={recipientFormData[name as keyof typeof recipientFormData]}
+                value={
+                  recipientFormData[name as keyof typeof recipientFormData]
+                }
                 onChange={handleReceiverFieldChange}
               />
             ))}
@@ -336,23 +378,25 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             <SelectField
               placeholder="Select an option"
               options={[
-                { label: 'Personal', value: 'Personal' },
-                { label: 'Company', value: 'Company' },
+                { label: "Personal", value: "Personal" },
+                { label: "Company", value: "Company" },
               ]}
               label="Personal or Company *"
               value={recipientFormData.type}
-              onChange={(val: string) => handleReceiverFieldChange('type', val)}
+              onChange={(val: string) => handleReceiverFieldChange("type", val)}
             />
             <SelectField
               placeholder="Select an option"
               options={[
-                { label: 'Nigeria', value: 'Nigeria' },
-                { label: 'United States', value: 'United States' },
-                { label: 'United Kingdom', value: 'United Kingdom' },
+                { label: "Nigeria", value: "Nigeria" },
+                { label: "United States", value: "United States" },
+                { label: "United Kingdom", value: "United Kingdom" },
               ]}
               label="Country *"
               value={recipientFormData.country}
-              onChange={(val: string) => handleReceiverFieldChange('country', val)}
+              onChange={(val: string) =>
+                handleReceiverFieldChange("country", val)
+              }
             />
           </div>
         </div>
@@ -364,17 +408,28 @@ const ReceipientDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             title="Continue"
             variant="blue"
             className="w-[274px]"
-            disabled={!isFormValid(senderFormData) || !isReceiverFormValid(recipientFormData)}
+            disabled={
+              !isFormValid(senderFormData) ||
+              !isReceiverFormValid(recipientFormData)
+            }
           />
         </div>
 
         <p className="text-[16px] text-[#21222D] font-normal max-w-[630px] mt-[24px] mx-auto text-center">
-          Your information is safe with us. Read more about our{' '}
-          <Link target="_blank" href="/terms-and-conditions" className="text-[#0088DD]">
+          Your information is safe with us. Read more about our{" "}
+          <Link
+            target="_blank"
+            href="/terms-and-conditions"
+            className="text-[#0088DD]"
+          >
             Terms & Conditions
-          </Link>{' '}
-          and{' '}
-          <Link target="_blank" href="/privacy-policy" className="text-[#0088DD]">
+          </Link>{" "}
+          and{" "}
+          <Link
+            target="_blank"
+            href="/privacy-policy"
+            className="text-[#0088DD]"
+          >
             Privacy Policy
           </Link>
         </p>
@@ -388,16 +443,16 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
   const { priceDetails, quote } = useAppSelector((state) => state.quoteData);
 
   const [form, setForm] = useState({
-    package_no: booking?.product_value || '',
-    product_type: booking?.product_type || '',
-    product_weight: booking?.product_weight || '',
-    product_details: booking?.product_details || '',
-    commodity_code: '',
-    quantity: booking.product_qty || '1',
-    product_book: booking?.product_book || '',
-    product_code: booking?.product_code || '',
-    unit_weight: booking?.product_weight || '',
-    product_value: booking?.product_value || '',
+    package_no: booking?.product_value || "",
+    product_type: booking?.product_type || "",
+    product_weight: booking?.product_weight || "",
+    product_details: booking?.product_details || "",
+    commodity_code: "",
+    quantity: booking.product_qty || "1",
+    product_book: booking?.product_book || "",
+    product_code: booking?.product_code || "",
+    unit_weight: booking?.product_weight || "",
+    product_value: booking?.product_value || "",
   });
 
   const dispatch = useAppDispatch();
@@ -410,7 +465,9 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
     const fieldMap = {
       ...form,
       product_qty: form.quantity,
-      amount: Number(priceDetails.handlingFee) + Number(form.quantity) * priceDetails?.totalPrice,
+      amount:
+        Number(priceDetails.handlingFee) +
+        Number(form.quantity) * priceDetails?.totalPrice,
       // amount: priceDetails?.totalAmount,
     };
 
@@ -454,7 +511,9 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
       </p>
 
       <div className="mt-6 sm:mt-[32px]">
-        <p className="text-[#272727] text-center text-base sm:text-[18px] mt-3 sm:mt-[16px]">Package 1 Details</p>
+        <p className="text-[#272727] text-center text-base sm:text-[18px] mt-3 sm:mt-[16px]">
+          Package 1 Details
+        </p>
 
         <div className="mt-6 sm:mt-[32px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-[24px]">
           {/* Left Column */}
@@ -468,9 +527,9 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             />
             <SelectField
               label="Product Type"
-              options={[{ label: 'Electronics', value: 'Electronics' }]}
+              options={[{ label: "Electronics", value: "Electronics" }]}
               value={form.product_type}
-              onChange={(val) => handleFieldChange('product_type', val)}
+              onChange={(val) => handleFieldChange("product_type", val)}
               placeholder="Select product type"
             />
             <InputField
@@ -582,7 +641,9 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
               </div>
               <div className="flex justify-between">
                 <span>Package Contents Declared</span>
-                <span>{`£${Number(form.quantity) * priceDetails?.totalPrice}`}</span>
+                <span>{`£${
+                  Number(form.quantity) * priceDetails?.totalPrice
+                }`}</span>
               </div>
               {/* <div className="flex justify-between">
                 <span>VAT</span>
@@ -590,7 +651,10 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
               </div> */}
               <div className="border-t border-black pt-2 font-semibold flex justify-between text-black">
                 <span>Total Product Value</span>
-                <span>{`£${Number(priceDetails.handlingFee) + Number(form.quantity) * priceDetails?.totalPrice}`}</span>
+                <span>{`£${
+                  Number(priceDetails.handlingFee) +
+                  Number(form.quantity) * priceDetails?.totalPrice
+                }`}</span>
               </div>
             </div>
           </div>
@@ -598,7 +662,12 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
       </div>
 
       {/* Continue Button */}
-      <Button onClick={() => {}} title="Add to Cart" variant="blue" className="w-full sm:w-[274px] mt-4" />
+      <Button
+        onClick={() => {}}
+        title="Add to Cart"
+        variant="blue"
+        className="w-full sm:w-[274px] mt-4"
+      />
       <div className="flex flex-col items-center justify-center mt-8 sm:mt-[50px]">
         <Button
           onClick={handleContinue}
@@ -615,7 +684,9 @@ const PackageDetails = ({ setActiveStepId }: { setActiveStepId?: any }) => {
 const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
   const booking = useAppSelector((state) => state.booking);
   const quote = useAppSelector((state) => state.quote);
-  const { quote: quoteData, priceDetails } = useAppSelector((state) => state.quoteData);
+  const { quote: quoteData, priceDetails } = useAppSelector(
+    (state) => state.quoteData
+  );
   const dispatch = useAppDispatch();
 
   const { isPending, mutate } = useCreateBooking((response: any) => {
@@ -625,7 +696,7 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
       dispatch(resetBooking());
       window.location.href = response?.data?.data?.url;
     } else {
-      console.error('Stripe Checkout URL not found');
+      console.error("Stripe Checkout URL not found");
     }
   });
 
@@ -646,21 +717,36 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
   // Optional Features toggle
   const toggleCheckbox = (field: string) => {
     switch (field) {
-      case 'is_insured':
-        dispatch(updateBookingField({ field: 'is_insured', value: !booking.is_insured }));
+      case "is_insured":
+        dispatch(
+          updateBookingField({
+            field: "is_insured",
+            value: !booking.is_insured,
+          })
+        );
         break;
-      case 'has_protection':
-        dispatch(updateBookingField({ field: 'has_protection', value: !booking.has_protection }));
+      case "has_protection":
+        dispatch(
+          updateBookingField({
+            field: "has_protection",
+            value: !booking.has_protection,
+          })
+        );
         break;
-      case 'is_sign_required':
-        dispatch(updateBookingField({ field: 'is_sign_required', value: !booking.is_sign_required }));
+      case "is_sign_required":
+        dispatch(
+          updateBookingField({
+            field: "is_sign_required",
+            value: !booking.is_sign_required,
+          })
+        );
         break;
     }
   };
 
   // Print type selection
-  const handlePrintChange = (value: 'home' | 'shop') => {
-    dispatch(updateBookingField({ field: 'print_type', value }));
+  const handlePrintChange = (value: "home" | "shop") => {
+    dispatch(updateBookingField({ field: "print_type", value }));
   };
 
   return (
@@ -685,10 +771,14 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
                 {booking.parcel?.map((parcel, index) => (
                   <tr key={index} className="border-b">
                     <td className="p-3">{index + 1}</td>
-                    <td className="p-3">{parcel.items[0]?.description || 'N/A'}</td>
-                    <td className="p-3">${parcel.items[0]?.description || '0'} exc VAT</td>
                     <td className="p-3">
-                      {' '}
+                      {parcel.items[0]?.description || "N/A"}
+                    </td>
+                    <td className="p-3">
+                      ${parcel.items[0]?.description || "0"} exc VAT
+                    </td>
+                    <td className="p-3">
+                      {" "}
                       <div className="flex justify-center space-x-2">
                         <button className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50 transition-colors">
                           <svg
@@ -726,7 +816,9 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
           <div className="space-y-6 mb-8">
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="flex-1">
-                <h2 className="text-lg font-semibold mb-2">Return Details: {booking.sender_address.contact_name}</h2>
+                <h2 className="text-lg font-semibold mb-2">
+                  Return Details: {booking.sender_address.contact_name}
+                </h2>
                 <div className="bg-gray-50 p-4 rounded">
                   <p>{booking.sender_address.address_line_1}</p>
                   <p>{booking.sender_address.post_code}</p>
@@ -735,7 +827,9 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
               </div>
 
               <div className="flex-1">
-                <h2 className="text-lg font-semibold mb-2">Delivery Details: {booking.sender_address.contact_name}</h2>
+                <h2 className="text-lg font-semibold mb-2">
+                  Delivery Details: {booking.sender_address.contact_name}
+                </h2>
                 <div className="bg-gray-50 p-4 rounded">
                   <p>{booking.sender_address.address_line_2}</p>
                   <p>{booking.sender_address.post_code}</p>
@@ -750,14 +844,18 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
             <h2 className="text-lg font-semibold mb-2">Optional Features</h2>
             <div className="bg-gray-50 p-4 rounded space-y-2">
               <label className="flex items-center gap-2">
-                <input type="checkbox" checked={booking.is_insured} onChange={() => toggleCheckbox('is_insured')} />
+                <input
+                  type="checkbox"
+                  checked={booking.is_insured}
+                  onChange={() => toggleCheckbox("is_insured")}
+                />
                 Package Insured
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={booking.has_protection}
-                  onChange={() => toggleCheckbox('has_protection')}
+                  onChange={() => toggleCheckbox("has_protection")}
                 />
                 Additional Protection
               </label>
@@ -765,7 +863,7 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
                 <input
                   type="checkbox"
                   checked={booking.is_sign_required}
-                  onChange={() => toggleCheckbox('is_sign_required')}
+                  onChange={() => toggleCheckbox("is_sign_required")}
                 />
                 Signature Required
               </label>
@@ -781,8 +879,8 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
                   type="radio"
                   name="printOption"
                   value="home"
-                  checked={booking.print_type === 'home'}
-                  onChange={() => handlePrintChange('home')}
+                  checked={booking.print_type === "home"}
+                  onChange={() => handlePrintChange("home")}
                 />
                 Print at Home
               </label>
@@ -791,8 +889,8 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
                   type="radio"
                   name="printOption"
                   value="shop"
-                  checked={booking.print_type === 'shop'}
-                  onChange={() => handlePrintChange('shop')}
+                  checked={booking.print_type === "shop"}
+                  onChange={() => handlePrintChange("shop")}
                 />
                 Print in Shop (GBP 2.34)
               </label>
@@ -820,7 +918,7 @@ const PreviewFinish = ({ setActiveStepId }: { setActiveStepId?: any }) => {
               </div>
               <div className="flex justify-between">
                 <span>VAT</span>
-                <span>${'0.00'}</span>
+                <span>${"0.00"}</span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total Due</span>

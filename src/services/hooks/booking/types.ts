@@ -15,38 +15,112 @@ interface BookingLabel {
   updatedAt: string;
 }
 
-interface BookingTracker {}
-
-export interface BookingData {
+export interface BookingItem {
   id: string;
-  user_id: string;
-  service_id: string;
-  sender_address_id: string;
-  recipient_address_id: string;
-  code: string;
-  product_book: string;
-  product_code: string;
-  product_type: string;
-  product_details: string;
-  product_weight: string;
-  product_value: string;
-  product_qty: string;
-  origin: string;
-  origin_postcode: string;
-  destination: string;
-  destination_postcode: string;
-  is_insured: boolean;
-  has_protection: boolean;
-  is_sign_required: boolean;
-  print_type: string;
-  amount: number;
-  parcel: string;
+  booking_id: string;
+  group_id: string;
+  description: string;
+  hs_code: string;
+  sku: string;
+  quantity: number;
+  unit_weight: string;
+  weight: string;
+  weight_unit: string;
+  actual_quantity: number | null;
+  actual_unit_weight: string | null;
+  actual_weight: string | null;
+  comment: string | null;
   status: string;
-  comment: null;
   createdAt: string;
   updatedAt: string;
-  BookingLabels: BookingLabel[];
-  BookingTrackers: BookingTracker[];
+}
+
+interface BookingTracker {
+  id: string;
+  booking_id: string;
+  status: string;
+  slug: string;
+  comment: string | null;
+  action: string | null;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
+export interface BookingData {
+  booking: {
+    id: string;
+    user_id: string;
+    service_id: string;
+    sender_address_id: string;
+    recipient_address_id: string;
+    code: string;
+    product_book: string;
+    product_code: string;
+    product_type: string;
+    product_details: string;
+    product_weight: string;
+    product_value: string;
+    product_qty: string;
+    origin: string;
+    origin_postcode: string;
+    destination: string;
+    destination_postcode: string;
+    is_insured: boolean;
+    has_protection: boolean;
+    is_sign_required: boolean;
+    print_type: string;
+    amount: number;
+    parcel: string;
+    status: string;
+    comment: null;
+    createdAt: string;
+    updatedAt: string;
+    recipientAddress: {
+      id: string;
+      user_id: string;
+      label: string;
+      contact_name: string;
+      contact_email: string;
+      contact_phone: string;
+      address_line_1: string;
+      address_line_2?: string;
+      city: string;
+      state?: string;
+      post_code: string;
+      country: string;
+      country_iso: string;
+      address_type?: string;
+      drivers_note?: string;
+      is_default: boolean;
+      is_sender_address: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+    senderAddress: {
+      id: string;
+      user_id: string;
+      label: string;
+      contact_name: string;
+      contact_email: string;
+      contact_phone: string;
+      address_line_1: string;
+      address_line_2?: string;
+      city: string;
+      state?: string;
+      post_code: string;
+      country: string;
+      country_iso: string;
+      address_type?: string;
+      drivers_note?: string;
+      is_default: boolean;
+      is_sender_address: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+    BookingItems: BookingItem[];
+    BookingLabels: BookingLabel[];
+    BookingTrackers: BookingTracker[];
+  };
 }
 
 export interface BookingByIdResponse {

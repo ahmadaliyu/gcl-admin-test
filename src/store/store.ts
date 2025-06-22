@@ -1,15 +1,25 @@
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
-import formSlice from './auth/formSlice';
-import storage from 'redux-persist/lib/storage';
-import userSlice from './user/userSlice';
-import countrySlice from './auth/countrySlice';
-import quoteSlice from './auth/quoteSlice';
-import quoteDataSlice from './auth/quoteDataSlice';
-import bookingSlice from './booking/bookingSlice';
-import addressSlice from './user/addressSlice';
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from "redux-persist";
+import formSlice from "./auth/formSlice";
+import storage from "redux-persist/lib/storage";
+import userSlice from "./user/userSlice";
+import countrySlice from "./auth/countrySlice";
+import quoteSlice from "./auth/quoteSlice";
+import quoteDataSlice from "./auth/quoteDataSlice";
+import bookingSlice from "./booking/bookingSlice";
+import addressSlice from "./user/addressSlice";
+import trackingSlice from "./booking/trackingSlice";
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage,
 };
 
@@ -21,6 +31,7 @@ const rootReducer = combineReducers({
   quoteData: quoteDataSlice,
   booking: bookingSlice,
   address: addressSlice,
+  tracking: trackingSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -33,7 +44,7 @@ export const store = configureStore({
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
-  devTools: process.env.NODE_ENV !== 'production',
+  devTools: process.env.NODE_ENV !== "production",
 });
 
 // Infer the type of makeStore
