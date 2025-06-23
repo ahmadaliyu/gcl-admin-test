@@ -215,7 +215,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       }
                       className="bg-blue-100 text-black px-6 py-2 rounded-full border hover:bg-blue-200 transition"
                     >
-                      Track Orders
+                      Track Order
                     </button>
                     <button className="bg-white text-black px-6 py-2 rounded-full border hover:bg-gray-100 transition">
                       Notify Customer

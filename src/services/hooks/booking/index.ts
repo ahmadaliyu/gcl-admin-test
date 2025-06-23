@@ -7,3 +7,4 @@ export * from "./useCreateLabel";
 export * from "./useValidateException";
 export * from "./useCreateException";
 export * from "./useTriggerAdditionalPayment";
+export * from "./useUpdateBookingStatus";

@@ -2,7 +2,7 @@ import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrappe
 import DashboardSkeleton from "@/components/ui/dashboard-skeleton";
 import { useGetBooking } from "@/services";
 import { useParams, useRouter } from "next/navigation";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { FiTrendingUp, FiTrendingDown } from "react-icons/fi";
 import {
   LineChart,
@@ -491,37 +491,71 @@ interface OrdersTableProps {
   orders?: Order[];
 }
 // Orders Table Component
+
+interface Order {
+  id: string;
+  code: string;
+  status: string;
+  sender_address_id: string;
+  updatedAt: string;
+  origin: string;
+  destination: string;
+}
+
+interface OrdersTableProps {
+  orders?: Order[];
+}
+
 const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
   const router = useRouter();
+  const [search, setSearch] = useState("");
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const searchLower = search.toLowerCase();
+      return (
+        order.code.toLowerCase().includes(searchLower) ||
+        order.status.toLowerCase().includes(searchLower) ||
+        `${order.origin} - ${order.destination}`
+          .toLowerCase()
+          .includes(searchLower)
+      );
+    });
+  }, [search, orders]);
+
   return (
-    <div className="overflow-x-auto">
-      {/* Mobile Cards View (hidden on larger screens) */}
+    <div className="space-y-6">
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by Order ID, Status or Route"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Mobile View */}
       <div className="sm:hidden space-y-4">
-        {orders.map((order, index) => (
+        {filteredOrders.map((order, index) => (
           <div
             role="button"
             tabIndex={0}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              router.push(`/user/track-shipment-overview/${order.id}`);
-            }}
+            onClick={() =>
+              router.push(`/user/track-shipment-overview/${order.id}`)
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
                 router.push(`/user/track-shipment-overview/${order.id}`);
               }
             }}
             key={`${order.id}-${index}`}
-            className="bg-white p-4 rounded-lg shadow transition-all duration-200 
-                   hover:shadow-md hover:translate-y-[-2px] cursor-pointer
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="bg-white p-4 rounded-lg shadow transition hover:shadow-md hover:translate-y-[-2px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {"ORDER ID"}
-                </p>
+                <p className="text-sm font-medium text-gray-900">ORDER ID</p>
                 <p className="text-xs text-gray-500">
                   {order.code.substring(0, 6)}...
                 </p>
@@ -536,7 +570,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
                 {order.status}
               </span>
             </div>
-
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div>
                 <p className="text-gray-500">Email</p>
@@ -544,7 +577,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
               </div>
               <div>
                 <p className="text-gray-500">Company</p>
-                <p>{"N/A"}</p>
+                <p>N/A</p>
               </div>
               <div>
                 <p className="text-gray-500">Arrival</p>
@@ -559,75 +592,77 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
         ))}
       </div>
 
-      {/* Table View (hidden on mobile) */}
-      <table className="hidden sm:table min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Order ID
-            </th>
-            <th className="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Customer
-            </th>
-            <th className="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Email
-            </th>
-            <th className="hidden md:table-cell px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Company
-            </th>
-            <th className="px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
-            </th>
-            <th className="hidden lg:table-cell px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Arrival
-            </th>
-            <th className="hidden xl:table-cell px-3 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Route
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {orders.map((order, index) => (
-            <tr
-              onClick={() =>
-                router.push(`/user/track-shipment-overview/${order.id}`)
-              }
-              key={`${order.id}-${index}`}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              <td className="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
-                {order.code.substring(0, 6)}...
-              </td>
-              <td className="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
-                {"Name".split(" ")[0]}
-              </td>
-              <td className="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
-                {order.sender_address_id.substring(0, 10)}...
-              </td>
-              <td className="hidden md:table-cell px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
-                {"N/A"}
-              </td>
-              <td className="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
-                <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    order.status === "Delivered"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {order.status}
-                </span>
-              </td>
-              <td className="hidden lg:table-cell px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
-                {order.updatedAt}
-              </td>
-              <td className="hidden xl:table-cell px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-900">
-                {`${order.origin} - ${order.destination}`}
-              </td>
+      {/* Desktop Table View */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="min-w-full table-auto divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="min-w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Order ID
+              </th>
+              <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="min-w-[120px] hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Company
+              </th>
+              <th className="min-w-[100px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="min-w-[160px] hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Arrival
+              </th>
+              <th className="min-w-[200px] hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Route
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredOrders.map((order, index) => (
+              <tr
+                onClick={() =>
+                  router.push(`/user/track-shipment-overview/${order.id}`)
+                }
+                key={`${order.id}-${index}`}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  {order.code}
+                </td>
+                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  Name
+                </td>
+                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  {order.sender_address_id}
+                </td>
+                <td className="hidden md:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  N/A
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      order.status === "Delivered"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {order.status}
+                  </span>
+                </td>
+                <td className="hidden lg:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  {order.updatedAt}
+                </td>
+                <td className="hidden xl:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  {`${order.origin} - ${order.destination}`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
