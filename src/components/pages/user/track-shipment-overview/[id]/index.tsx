@@ -12,134 +12,12 @@ import {
 } from "@/services";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import ExceptionModal, { InputField } from "../components";
+import { storage } from "@/lib/storage/localstorage";
 
 const Spinner = () => (
   <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
 );
-
-interface InputFieldProps {
-  label: string;
-  name: string;
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-  disabled?: boolean;
-}
-
-const InputField = ({
-  label,
-  name,
-  value,
-  onChange,
-  className = "",
-  disabled = false,
-}: InputFieldProps) => (
-  <div>
-    <label htmlFor={name} className="font-semibold capitalize mb-1 block">
-      {label}
-    </label>
-    <input
-      type="text"
-      id={name}
-      name={name}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className={`w-full h-10 px-3 py-2 rounded border focus:outline-none ${className}`}
-    />
-  </div>
-);
-
-interface ExceptionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  defaultMessage: string;
-  difference: string;
-  onSubmit: (message: string, amount: number) => void;
-  isLoading: boolean;
-}
-
-const ExceptionModal = ({
-  isOpen,
-  onClose,
-  defaultMessage,
-  difference,
-  onSubmit,
-  isLoading,
-}: ExceptionModalProps) => {
-  const [message, setMessage] = useState(defaultMessage);
-  const [amount, setAmount] = useState(difference);
-
-  useEffect(() => {
-    setMessage(defaultMessage);
-    setAmount(difference);
-  }, [defaultMessage]);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const numericAmount = parseFloat(amount);
-    if (message.trim() && !isNaN(numericAmount) && numericAmount > 0) {
-      onSubmit(message, numericAmount);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Raise Exception</h2>
-        <div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Message</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full h-24 p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">
-              Additional Amount Required: £{difference}
-            </label>
-            {/* <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2 border rounded"
-              min="0"
-              step="0.01"
-              required
-            /> */}
-          </div>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            {/* <button
-              type="submit"
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-red-300"
-              disabled={isLoading}
-            >
-              {isLoading ? <Spinner /> : "Submit Exception"}
-            </button> */}
-            <Button
-              title="Submit Exception"
-              loading={isLoading}
-              onClick={handleSubmit}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function TrackingOrderPage() {
   const params = useParams();
@@ -165,31 +43,43 @@ export default function TrackingOrderPage() {
     message: string;
     difference: string;
     bookingId?: string;
+    slug?: string;
+    mismatchedItems?: { id: string; name?: string }[];
   }>({ message: "", difference: "" });
 
   const booking = data?.data?.booking;
+  const labelId = data?.data?.booking?.BookingLabels[0]?.id;
   const code = booking?.code;
   const sender = booking?.senderAddress;
   const recipient = booking?.recipientAddress;
 
-  const { mutate: createLabel, isPending: isCreatingLabel } = useCreateLabel(
-    (response) => {
-      console.log(response, "create label response");
-      // alert("Create Label success");
+  const {
+    mutate: createLabel,
+    isPending: isCreatingLabel,
+    data: labelRes,
+    error,
+  } = useCreateLabel((response) => {
+    if (response) {
+      alert(`Label Created Successfully`);
     }
-  );
+  });
+
   const { mutate: validate, isPending: isValidating } = useValidateException();
   const { mutate: createException, isPending: isCreatingException } =
     useCreateException();
   const { mutate: triggerPayment, isPending: isTriggeringPayment } =
-    useTriggerAdditionalPayment();
+    useTriggerAdditionalPayment((res) => console.log(res, "resssszzzzz"));
 
   useEffect(() => {
     if (booking?.BookingItems?.length) {
       const initialMap: typeof actualValuesMap = {};
       for (const item of booking.BookingItems) {
         if (!actualValuesMap[item.id]) {
-          initialMap[item.id] = { weight: "", quantity: "", "unit weight": "" };
+          initialMap[item.id] = {
+            weight: item.actual_weight || "",
+            quantity: item.actual_quantity?.toString() || "",
+            "unit weight": item.actual_unit_weight?.toString() || "",
+          };
         }
       }
       if (Object.keys(initialMap).length > 0) {
@@ -197,6 +87,44 @@ export default function TrackingOrderPage() {
       }
     }
   }, [booking?.BookingItems]);
+
+  // const handleDownloadLabel = async (uri: string, labelId: string) => {
+  //   try {
+  //     // Add cache busting parameter to ensure fresh download
+  //     const url = new URL(uri);
+  //     url.searchParams.append("_", Date.now().toString());
+
+  //     const response = await fetch(url.toString());
+
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to download label: ${response.status}`);
+  //     }
+
+  //     const blob = await response.blob();
+  //     const downloadUrl = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = downloadUrl;
+  //     a.download = `shipping-label-${labelId}.pdf`;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     window.URL.revokeObjectURL(downloadUrl);
+  //     document.body.removeChild(a);
+  //   } catch (err) {
+  //     console.error("Label download error:", err);
+  //     alert("Failed to download label. Please try again.");
+  //   }
+  // };
+
+  const handleDownloadLabel = (uri: string, labelId: string) => {
+    // Create a temporary anchor element
+    const a = document.createElement("a");
+    a.href = uri;
+    a.download = `shipping-label-${labelId}.pdf`;
+    a.target = "_blank"; // Open in new tab (optional)
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const handleItemFieldChange = (
     itemId: string,
@@ -231,11 +159,7 @@ export default function TrackingOrderPage() {
     const status = validationStatus[itemId];
     if (!status || status.status === "pending")
       return "border-gray-300 bg-white";
-    if (
-      status.status === "mismatch" &&
-      status.mismatchedFields?.includes(field)
-    )
-      return "border-red-500 bg-red-50";
+    if (status.status === "mismatch") return "border-red-500 bg-red-50";
     if (status.status === "approved") return "border-green-500 bg-green-50";
     return "border-gray-300";
   };
@@ -255,6 +179,8 @@ export default function TrackingOrderPage() {
       : "bg-red-100 text-red-800";
   };
 
+  const [hasValidatedAnyItem, setHasValidatedAnyItem] = useState(false);
+
   const validateItem = (itemId: string) => {
     const actual = actualValuesMap[itemId];
     if (!actual || !booking?.id) return;
@@ -271,6 +197,7 @@ export default function TrackingOrderPage() {
 
     if (isComplete) {
       setValidatingItems((prev) => new Set(prev).add(itemId));
+
       validate(
         {
           bookingId: booking.id,
@@ -279,13 +206,14 @@ export default function TrackingOrderPage() {
               id: itemId,
               weight: Number(weight),
               quantity: Number(quantity),
-              unit_weight: Number(unitWeight),
+              unit_weight: unitWeight.toString(),
             },
           },
         },
         {
           onSuccess: (response) => {
             handleValidateSuccess(response, itemId);
+            setHasValidatedAnyItem(true);
             setValidatingItems((prev) => {
               const newSet = new Set(prev);
               newSet.delete(itemId);
@@ -304,9 +232,48 @@ export default function TrackingOrderPage() {
     }
   };
 
+  const approveItemAnyways = (itemId: string) => {
+    const actual = actualValuesMap[itemId];
+    if (!actual || !booking?.id) return;
+
+    setValidatingItems((prev) => new Set(prev).add(itemId));
+
+    validate(
+      {
+        bookingId: booking.id,
+        approve: true,
+        payload: {
+          item: {
+            id: itemId,
+            weight: Number(actual.weight),
+            quantity: Number(actual.quantity),
+            unit_weight: actual["unit weight"].toString(),
+          },
+        },
+      },
+      {
+        onSuccess: (response) => {
+          handleValidateSuccess(response, itemId);
+          setValidatingItems((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(itemId);
+            return newSet;
+          });
+        },
+        onError: () => {
+          setValidatingItems((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(itemId);
+            return newSet;
+          });
+        },
+      }
+    );
+  };
+
   const handleCreateLabel = () => {
-    if (!booking?.id) return;
-    createLabel({ bookingId: booking?.id });
+    if (!booking?.id || !labelId) return;
+    createLabel({ labelId: booking?.id });
   };
 
   const handleRaiseException = () => {
@@ -318,17 +285,25 @@ export default function TrackingOrderPage() {
       },
       {
         onSuccess: (response) => {
-          console.log(response, "raise exception");
+          const mismatched = booking?.BookingItems?.filter(
+            (item) => validationStatus[item.id]?.status === "mismatch"
+          )?.map((item) => ({
+            id: item.id,
+            name: item.status || item.id,
+          }));
 
-          const message =
-            response?.data?.data?.message ||
-            "There is a discrepancy in the package information that requires additional payment.";
           setExceptionData({
-            message,
-            difference: response?.data?.data.difference,
+            message: response?.data?.data?.message || "...",
+            difference: response?.data?.data?.difference || "0",
             bookingId: booking.id,
+            slug: response?.data?.data?.slug || "",
+            mismatchedItems: mismatched,
           });
           setIsExceptionModalOpen(true);
+        },
+
+        onError: () => {
+          alert("Failed to raise exception. Please try again.");
         },
       }
     );
@@ -348,7 +323,10 @@ export default function TrackingOrderPage() {
       {
         onSuccess: () => {
           setIsExceptionModalOpen(false);
-          alert("Success");
+          alert("Payment request submitted successfully");
+        },
+        onError: () => {
+          alert("Failed to submit payment request. Please try again.");
         },
       }
     );
@@ -356,7 +334,7 @@ export default function TrackingOrderPage() {
 
   const BOOKING_DATA = useMemo(() => {
     return booking?.BookingItems || [];
-  }, [validateItem]);
+  }, [booking?.BookingItems]);
 
   const allApproved = useMemo(() => {
     if (!booking?.BookingItems?.length) return false;
@@ -434,13 +412,14 @@ export default function TrackingOrderPage() {
                           <p className="font-medium">{code}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Gross Weight</p>
-                          <p className="font-medium">{item.weight}kg</p>
-                        </div>
-                        <div>
                           <p className="text-gray-500">Quantity</p>
                           <p className="font-medium">{item.quantity} items</p>
                         </div>
+                        <div>
+                          <p className="text-gray-500">Gross Weight</p>
+                          <p className="font-medium">{item.weight}kg</p>
+                        </div>
+
                         <div>
                           <p className="text-gray-500">Unit Weight</p>
                           <p className="font-medium">{item.unit_weight} kg</p>
@@ -467,7 +446,7 @@ export default function TrackingOrderPage() {
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                      {["weight", "quantity", "unit weight"].map((field) => (
+                      {["quantity", "weight", "unit weight"].map((field) => (
                         <InputField
                           key={field}
                           label={`Actual ${field}`}
@@ -506,7 +485,7 @@ export default function TrackingOrderPage() {
                 <Button
                   onClick={handleCreateLabel}
                   loading={isCreatingLabel}
-                  title="Confirm Receipt"
+                  title="Confirm and Create Label"
                   variant="primary"
                 />
               ) : (
@@ -516,13 +495,86 @@ export default function TrackingOrderPage() {
                     onClick={handleRaiseException}
                     loading={isCreatingException}
                     variant="danger"
+                    disabled={!hasValidatedAnyItem || isCreatingException}
                   />
+                  {!hasValidatedAnyItem && (
+                    <div className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                      Please validate at least one item first
+                    </div>
+                  )}
                   <button className="border border-gray-700 text-gray-800 text-sm px-4 py-2 rounded">
                     Return To Sender
                   </button>
                 </>
               )}
             </div>
+          </div>
+          <div className="border rounded-lg p-4 mb-6">
+            <p className="font-semibold text-base mb-4">Shipping Labels</p>
+
+            {booking?.BookingLabels?.length ? (
+              <div className="grid gap-4">
+                {booking.BookingLabels.map((label) => {
+                  const statusColor =
+                    {
+                      created: "bg-green-100 text-green-800",
+                      processing: "bg-blue-100 text-blue-800",
+                      error: "bg-red-100 text-red-800",
+                      cancelled: "bg-gray-100 text-gray-800",
+                    }[label.status.toLowerCase()] ||
+                    "bg-gray-100 text-gray-800";
+
+                  return (
+                    <div key={label.id} className="border p-4 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-gray-500">Courier</p>
+                          <p className="font-medium">{label.courier}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Status</p>
+                          <span
+                            className={`font-medium capitalize px-2 py-1 rounded-full text-xs ${statusColor}`}
+                          >
+                            {label.status}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Tracking Number</p>
+                          <p className="font-medium">
+                            {label.tracking_codes?.[0] || "Not available"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Type</p>
+                          <p className="font-medium">{label.type}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Created</p>
+                          <p className="font-medium">
+                            {new Date(label.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-end">
+                          <button
+                            onClick={() =>
+                              handleDownloadLabel(label.uri, label.id)
+                            }
+                            className="inline-block px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+                          >
+                            Download PDF
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500">
+                No labels generated yet
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -532,8 +584,12 @@ export default function TrackingOrderPage() {
         onClose={() => setIsExceptionModalOpen(false)}
         defaultMessage={exceptionData.message}
         onSubmit={handleSubmitException}
+        onApproveAnyways={approveItemAnyways}
         isLoading={isTriggeringPayment}
         difference={exceptionData.difference}
+        slug={exceptionData.slug}
+        isApproving={isValidating}
+        mismatchedItems={exceptionData.mismatchedItems}
       />
     </UserDashboardWrapper>
   );

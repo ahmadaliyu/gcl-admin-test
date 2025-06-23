@@ -5,7 +5,7 @@ interface Item {
   id: string;
   quantity: number;
   weight: number;
-  unit_weight: number;
+  unit_weight: string;
 }
 
 interface ItemPayload {
@@ -15,12 +15,16 @@ interface ItemPayload {
 type MutationProps = {
   bookingId: string;
   payload: ItemPayload;
+  approve?: boolean; // Optional flag
 };
 
 export const useValidateException = (onSuccess?: (data: any) => void) => {
   const { mutate, isPending } = useMutation({
-    mutationFn: ({ bookingId, payload }: MutationProps) => {
-      return post(`admin/bookings/${bookingId}/validate`, payload);
+    mutationFn: ({ bookingId, payload, approve }: MutationProps) => {
+      const url = `admin/bookings/${bookingId}/validate${
+        approve ? "?approve=true" : ""
+      }`;
+      return post(url, payload);
     },
 
     onSuccess: async (response: any) => {

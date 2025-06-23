@@ -1,3 +1,5 @@
+import { LegDetail } from "../auth";
+
 interface BookingLabel {
   id: string;
   booking_id: string;
@@ -47,6 +49,10 @@ interface BookingTracker {
 }
 
 export interface BookingData {
+  id(id: any): unknown;
+  code: string;
+  status: string;
+  createdAt: string | number | Date;
   booking: {
     id: string;
     user_id: string;
@@ -75,6 +81,7 @@ export interface BookingData {
     comment: null;
     createdAt: string;
     updatedAt: string;
+    leg_details: LegDetail[];
     recipientAddress: {
       id: string;
       user_id: string;
@@ -174,7 +181,8 @@ interface Booking {
 }
 
 export interface Orders {
-  bookings: Booking[];
+  // bookings: Booking[];
+  bookings: BookingData[];
 }
 
 export interface OrdersResponse {

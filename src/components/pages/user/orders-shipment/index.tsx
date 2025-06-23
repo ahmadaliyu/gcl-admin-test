@@ -222,13 +222,13 @@ function OrdersShipment() {
                 <TableRow
                   onClick={() => {
                     setIsModalOpen(true);
-                    setBookingId(service?.id);
+                    setBookingId(String(service?.id));
                   }}
-                  key={service.id}
+                  key={String(service.id)}
                 >
                   {/* Order ID */}
                   <TableCell className="border-b border-b-[#E3E3E3] font-medium py-[30px] px-[8px] flex items-center gap-2">
-                    <img src="/images/outer (2).png" className="w-[40px]" />
+                    {/* <img src="/images/outer (2).png" className="w-[40px]" /> */}
                     {service.code || "N/A"}
                   </TableCell>
 
@@ -272,7 +272,7 @@ function OrdersShipment() {
                   {/* Action */}
                   <TableCell className="border-b border-b-[#E3E3E3] font-medium py-[30px] px-[8px]">
                     <TableActions
-                      bookingId={service.id}
+                      bookingId={String(service.id)}
                       status={service.status}
                     />
                   </TableCell>

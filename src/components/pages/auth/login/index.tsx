@@ -83,14 +83,14 @@ function LoginPage() {
           <p>Keep me logged In</p>
         </div>
 
-        <div className=" mt-[32px]">
+        {/* <div className=" mt-[32px]">
           <Link
             className="text-[#0088DD] underline"
             href="/auth/forgot-password"
           >
             Can’t remember my password? Reset password
           </Link>
-        </div>
+        </div> */}
 
         <div className="flex flex-col items-center justify-center mt-[50px]">
           <Button

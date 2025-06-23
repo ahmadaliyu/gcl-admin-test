@@ -17,9 +17,25 @@ import {
 const DashboardOverview = () => {
   const { data, isPending } = useGetBooking();
 
-  const orders = useMemo(() => {
-    return data?.data?.bookings || [];
+  const orders = useMemo<Order[]>(() => {
+    return (
+      data?.data?.bookings?.map((booking: any) => ({
+        id: booking.id ?? "",
+        user_id: booking.user_id ?? "",
+        service_id: booking.service_id ?? "",
+        sender_address_id: booking.sender_address_id ?? "",
+        recipient_address_id: booking.recipient_address_id ?? "",
+        code: booking.code ?? "",
+        status: booking.status ?? "",
+        origin: booking.origin ?? "",
+        destination: booking.destination ?? "",
+        updatedAt: booking.updatedAt ?? "",
+        // Add other fields as needed
+      })) || []
+    );
   }, [data]);
+
+  console.log(orders, 96633);
 
   if (isPending) {
     return <DashboardSkeleton />;
@@ -28,8 +44,9 @@ const DashboardOverview = () => {
   return (
     <UserDashboardWrapper>
       <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        {/* <h2>Coming Soon</h2> */}
         {/* Stats Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 ">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 ">
           <StatCard
             title="Total Orders"
             value="750"
@@ -54,13 +71,13 @@ const DashboardOverview = () => {
             change="12% (30 days)"
             positive
           />
-        </div>
+        </div> */}
 
         {/* Revenue Charts Row */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        {/* <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
           <RevenueChart />
           <SpendChart />
-        </div>
+        </div> */}
 
         {/* Latest Orders Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
@@ -503,7 +520,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {"Name".split(" ")[0]}
+                  {"ORDER ID"}
                 </p>
                 <p className="text-xs text-gray-500">
                   {order.code.substring(0, 6)}...

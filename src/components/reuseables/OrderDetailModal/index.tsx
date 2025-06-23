@@ -1,6 +1,7 @@
 "use client";
 
 import { BookingData, useGetBookingById } from "@/services";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
 interface OrderDetailsModalProps {
@@ -33,6 +34,8 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   const booking = bookingData?.booking;
   const sender = booking?.senderAddress;
   const recipient = booking?.recipientAddress;
+
+  const router = useRouter();
 
   return (
     <div className="fixed inset-0 z-50">
@@ -206,7 +209,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
                   {/* Buttons */}
                   <div className="flex flex-col md:flex-row gap-4 mt-4">
-                    <button className="bg-blue-100 text-black px-6 py-2 rounded-full border hover:bg-blue-200 transition">
+                    <button
+                      onClick={() =>
+                        router.replace(`/user/tracking-details/${bookingId}`)
+                      }
+                      className="bg-blue-100 text-black px-6 py-2 rounded-full border hover:bg-blue-200 transition"
+                    >
                       Track Orders
                     </button>
                     <button className="bg-white text-black px-6 py-2 rounded-full border hover:bg-gray-100 transition">

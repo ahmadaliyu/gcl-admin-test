@@ -132,7 +132,7 @@ export const menus = [
   {
     title: "Logout",
     type: "action",
-    link: "/user/logout",
+    link: "#",
     textColor: "#E51520",
     leftIcon: (
       <svg
