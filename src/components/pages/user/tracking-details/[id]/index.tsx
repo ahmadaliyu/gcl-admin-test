@@ -10,6 +10,35 @@ import {
   useUpdateBookingStatus,
 } from "@/services";
 import { LoadingSkeleton } from "../loading-skeleton";
+import { useAlert } from "@/components/reuseables/Alert/alert-context";
+
+const statusColorMap: Record<string, string> = {
+  "Picked Up": "bg-blue-600 text-blue-600 border-blue-600",
+  "On Transit": "bg-yellow-500 text-yellow-500 border-yellow-500",
+  "On Hold": "bg-orange-500 text-orange-500 border-orange-500",
+  "Arrived at UK Office": "bg-purple-500 text-purple-500 border-purple-500",
+  "Arrived at NG Office": "bg-indigo-500 text-indigo-500 border-indigo-500",
+  "Clearance in Progress": "bg-pink-500 text-pink-500 border-pink-500",
+  "Complete Payment": "bg-amber-600 text-amber-600 border-amber-600",
+  "Out for Delivery": "bg-green-500 text-green-500 border-green-500",
+  Delivered: "bg-emerald-600 text-emerald-600 border-emerald-600",
+  Returned: "bg-red-500 text-red-500 border-red-500",
+  Cancelled: "bg-gray-500 text-gray-500 border-gray-500",
+};
+
+const statusCommentMap: Record<string, string> = {
+  "Picked Up": "Collected from sender.",
+  "On Transit": "En route to the next hub or destination.",
+  "On Hold": "Delayed due to documentation, customs, or other issues.",
+  "Arrived at UK Office": "Mark international checkpoints.",
+  "Arrived at NG Office": "Mark international checkpoints.",
+  "Clearance in Progress": "For customs processing.",
+  "Complete Payment": "Payment still required before dispatch or delivery.",
+  "Out for Delivery": "With rider for last-mile delivery.",
+  Delivered: "Package handed over to recipient.",
+  Returned: "Recipient unavailable or rejected delivery.",
+  Cancelled: "Shipment cancelled.",
+};
 
 const TrackingDetails = () => {
   const params = useParams();
@@ -22,14 +51,14 @@ const TrackingDetails = () => {
   const [status, setStatus] = useState("");
   const [comment, setComment] = useState("");
 
+  const { showAlert } = useAlert();
+
   const { mutate: updateBookingStatus, isPending: isUpdating } =
     useUpdateBookingStatus((res) => {
-      console.log(res, "status response");
+      console.log(res);
 
-      if (res?.status === 200) {
-        setIsModalOpen(false);
-        alert("Status updated successfully!");
-      }
+      setIsModalOpen(false);
+      showAlert("Status updated successfully", "success");
     });
 
   if (isPending) {
@@ -48,41 +77,12 @@ const TrackingDetails = () => {
   const bookingLabels = booking?.BookingLabels?.[0];
   const legDetails = booking?.leg_details || [];
 
-  const currentStatus = bookingTrackers[0]?.status || "Unknown";
-  const orderPlacedDate = bookingTrackers[0]?.createdAt
-    ? new Date(bookingTrackers[0].createdAt).toLocaleString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "Unknown date";
-
-  const estimatedDeliveryDate = bookingTrackers[0]?.createdAt
-    ? new Date(
-        new Date(bookingTrackers[0].createdAt).getTime() +
-          3 * 24 * 60 * 60 * 1000
-      ).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "Unknown date";
-
-  const packageDetails = bookingItems.map((item) => ({
-    description:
-      item.description || booking?.product_details || `Item ${item.group_id}`,
-    weight: `${item.actual_weight} ${item.weight_unit}`,
-    quantity: item.actual_quantity,
-    status: item.status === "approved" ? "Completed" : item.status,
-  }));
-
-  const courierServices = legDetails
-    .map((leg: LegDetail) => leg.courier)
-    .join(" / ");
-  const trackingNumber = bookingLabels?.tracking_codes?.[0] || "";
-  const trackingUrl = bookingLabels?.tracking_urls?.[0] || "#";
+  const handleUpdate = () => {
+    updateBookingStatus({
+      id: booking?.id ?? "",
+      payload: { status, comment },
+    });
+  };
 
   const combinedStatuses = bookingTrackers.map((tracker) => {
     const itemStatus = bookingItems.find(
@@ -93,13 +93,6 @@ const TrackingDetails = () => {
       itemStatus: itemStatus === "approved" ? "Completed" : itemStatus,
     };
   });
-
-  const handleUpdate = () => {
-    updateBookingStatus({
-      id: booking?.id ?? "",
-      payload: { status, comment },
-    });
-  };
 
   return (
     <UserDashboardWrapper>
@@ -117,12 +110,17 @@ const TrackingDetails = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-          {/* Left - Timeline */}
-          <div className="space-y-6">
-            <div className="border-l-2 border-red-600 pl-4 relative">
-              {combinedStatuses.map((item, index) => (
+          <div className="space-y-6 border-l-2 border-red-600 pl-4 relative">
+            {combinedStatuses.map((item, index) => {
+              const colorClass =
+                statusColorMap[item.status] ||
+                "bg-gray-400 text-gray-600 border-gray-400";
+
+              return (
                 <div key={index} className="mb-6">
-                  <div className="absolute -left-2 w-4 h-4 rounded-full bg-red-600"></div>
+                  <div
+                    className={`absolute -left-2 w-4 h-4 rounded-full ${colorClass}`}
+                  ></div>
                   <div className="flex items-center gap-2">
                     <div className="text-sm font-medium">{item.status}</div>
                     {item.itemStatus === "Completed" && (
@@ -131,144 +129,44 @@ const TrackingDetails = () => {
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-2">
-                    {item.createdAt && (
-                      <>
-                        <span>
-                          {new Date(item.createdAt).toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </>
-                    )}
+                  <div className="text-xs text-gray-500">
+                    {item.createdAt &&
+                      new Date(item.createdAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                   </div>
                   {item.comment && (
-                    <span className="text-xs">{item.comment}</span>
+                    <div className="text-xs mt-1">{item.comment}</div>
                   )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          {/* Right - Details */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 text-sm gap-6">
-              <div>
-                <h3 className="font-semibold mb-2">Details:</h3>
-                <p>
-                  <b>Tracking Number:</b> {trackingNumber || "Not available"}
-                </p>
-                <p>
-                  <b>Shipment Status:</b> {currentStatus}
-                </p>
-                <p>
-                  <b>Item Status:</b>{" "}
-                  {bookingItems[0]?.status === "approved" ? (
-                    <span className="text-green-600 flex items-center gap-1">
-                      <CheckIcon /> Completed
-                    </span>
-                  ) : (
-                    bookingItems[0]?.status || "Unknown"
-                  )}
-                </p>
-                <p>
-                  <b>Order Placed:</b> {orderPlacedDate}
-                </p>
-                <p>
-                  <b>Estimated Delivery Date:</b> {estimatedDeliveryDate}
-                </p>
-                <p>
-                  <b>Courier Service:</b> {courierServices || "Not specified"}
-                </p>
-                <p>
-                  <b>Current Location:</b> {senderAddress?.city},{" "}
-                  {senderAddress?.country} → {recipientAddress?.city},{" "}
-                  {recipientAddress?.country}
-                </p>
-                <p>
-                  <b>Tracking URL:</b>{" "}
-                  <a
-                    href={trackingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600"
-                  >
-                    View Tracking
-                  </a>
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">From:</h3>
-                <p>{senderAddress?.contact_name}</p>
-                <p>{senderAddress?.address_line_1}</p>
-                <p>{senderAddress?.address_line_2}</p>
-                <p>
-                  {senderAddress?.city}, {senderAddress?.post_code}
-                </p>
-                <p>{senderAddress?.country}</p>
-                <p>{senderAddress?.contact_phone}</p>
-                <p>{senderAddress?.contact_email}</p>
-
-                <h3 className="font-semibold mt-4 mb-2">To:</h3>
-                <p>{recipientAddress?.contact_name}</p>
-                <p>{recipientAddress?.address_line_1}</p>
-                <p>{recipientAddress?.address_line_2}</p>
-                <p>
-                  {recipientAddress?.city}, {recipientAddress?.post_code}
-                </p>
-                <p>{recipientAddress?.country}</p>
-                <p>{recipientAddress?.contact_phone}</p>
-                <p>{recipientAddress?.contact_email}</p>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <h3 className="font-semibold text-red-600 mb-2">
-                Package Details
-              </h3>
-              <ul className="list-disc pl-6 text-sm">
-                {packageDetails.map((item, index) => (
-                  <React.Fragment key={index}>
-                    <li>
-                      <b>Item Description {index + 1}:</b> {item.description}
-                    </li>
-                    <li>
-                      <b>Weight:</b> {item.weight}
-                    </li>
-                    <li>
-                      <b>Quantity:</b> {item.quantity}
-                    </li>
-                    <li>
-                      <b>Status:</b>{" "}
-                      {item.status === "Completed" ? (
-                        <span className="text-green-600 flex items-center gap-1">
-                          <CheckIcon /> {item.status}
-                        </span>
-                      ) : (
-                        <span className="text-yellow-600">{item.status}</span>
-                      )}
-                    </li>
-                  </React.Fragment>
-                ))}
-                <li>
-                  <b>Product Type:</b> {booking?.product_type}
-                </li>
-                <li>
-                  <b>Product Value:</b> {booking?.product_value}
-                </li>
-              </ul>
-              <p className="mt-2 text-sm">
-                <b>Insurance Status:</b>{" "}
-                {booking?.is_insured ? "✅ Covered" : "❌ Not Covered"}
-                <br />
-                <b>Signature Required:</b>{" "}
-                {booking?.is_sign_required ? "✅ Yes" : "❌ No"}
-              </p>
-            </div>
+          <div className="space-y-4 text-sm">
+            <h3 className="font-semibold text-red-600">Shipment Details</h3>
+            <p>
+              <b>Tracking Number:</b>{" "}
+              {bookingLabels?.tracking_codes?.[0] || "N/A"}
+            </p>
+            <p>
+              <b>Status:</b> {bookingTrackers?.[0]?.status || "Unknown"}
+            </p>
+            <p>
+              <b>Courier:</b>{" "}
+              {legDetails?.map((leg: LegDetail) => leg.courier).join(" / ") ||
+                "N/A"}
+            </p>
+            <p>
+              <b>From:</b> {senderAddress?.city}, {senderAddress?.country}
+            </p>
+            <p>
+              <b>To:</b> {recipientAddress?.city}, {recipientAddress?.country}
+            </p>
           </div>
         </div>
 
@@ -279,12 +177,6 @@ const TrackingDetails = () => {
           >
             Back to Overview
           </button>
-          {/* <a
-            href={`mailto:${recipientAddress?.contact_email}?subject=Shipping Update for Order ${booking?.code}`}
-            className="w-full px-6 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition text-center"
-          >
-            Notify Customer
-          </a> */}
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition"
@@ -298,16 +190,29 @@ const TrackingDetails = () => {
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg space-y-4">
               <h2 className="text-lg font-semibold">Update Booking Status</h2>
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium">Status</label>
-                <input
-                  type="text"
+                <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(e) => {
+                    const selectedStatus = e.target.value;
+                    setStatus(selectedStatus);
+                    setComment(statusCommentMap[selectedStatus] || "");
+                  }}
                   className="w-full border rounded px-3 py-2 text-sm"
-                  placeholder="e.g., dispatched, delivered"
-                />
+                >
+                  <option value="" disabled>
+                    Select status
+                  </option>
+                  {Object.keys(statusCommentMap).map((statusOption) => (
+                    <option key={statusOption} value={statusOption}>
+                      {statusOption}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium">Comment</label>
                 <textarea
@@ -318,6 +223,7 @@ const TrackingDetails = () => {
                   placeholder="Add an optional comment"
                 />
               </div>
+
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   onClick={() => setIsModalOpen(false)}

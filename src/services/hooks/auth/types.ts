@@ -236,6 +236,7 @@ export interface LegDetail {
   handlingFee: string;
   estimatedTime: number;
   courier: string;
+  legId: string;
 }
 
 interface ShipmentSummary {

@@ -22,6 +22,12 @@ export const useSignIn = (onSuccess?: (data: any) => void) => {
       return post("auth/login", payload);
     },
     onSuccess: async (response: LoginResponse) => {
+      console.log(response, "hmm");
+
+      if (response?.status === 401) {
+        alert(`${response?.data?.message}`);
+        return;
+      }
       if (response.data?.data?.user?.Role.slug === "user") {
         alert("You are not authorized to access this page.");
         return;
@@ -29,6 +35,11 @@ export const useSignIn = (onSuccess?: (data: any) => void) => {
       if (onSuccess) {
         onSuccess(response);
       }
+    },
+    onError: (error) => {
+      console.log(error);
+
+      alert(`Error!! ${error}`);
     },
   });
 

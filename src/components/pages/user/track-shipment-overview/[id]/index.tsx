@@ -4,6 +4,7 @@ import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrappe
 import Button from "@/components/reuseables/Button";
 import DashboardSkeleton from "@/components/ui/dashboard-skeleton";
 import {
+  LegDetail,
   useCreateException,
   useCreateLabel,
   useGetBookingById,
@@ -12,8 +13,10 @@ import {
 } from "@/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import ExceptionModal, { InputField } from "../components";
-import { storage } from "@/lib/storage/localstorage";
+import ExceptionModal, { InputField } from "../components/exception-modal";
+import LegsModal from "../components/leg-detail-modal";
+import ShippingLabels from "../components/shipping-labels";
+import PackageInformation from "../components/package-information";
 
 const Spinner = () => (
   <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
@@ -46,6 +49,9 @@ export default function TrackingOrderPage() {
     slug?: string;
     mismatchedItems?: { id: string; name?: string }[];
   }>({ message: "", difference: "" });
+
+  const [isLegsModalOpen, setIsLegsModalOpen] = useState<boolean>(false);
+  const [legDetails, setLegDetails] = useState<LegDetail[]>([]);
 
   const booking = data?.data?.booking;
   const labelId = data?.data?.booking?.BookingLabels[0]?.id;
@@ -373,7 +379,7 @@ export default function TrackingOrderPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-lg p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-lg p-4 mb-6 relative">
             <div>
               <p className="text-sm text-gray-500 font-medium mb-1">
                 Ship From
@@ -397,7 +403,7 @@ export default function TrackingOrderPage() {
                 {recipient?.post_code}
               </p>
               <p>{recipient?.contact_email}</p>
-              <p>Expected Delivery Date: --</p>
+              {/* <p>Expected Delivery Date: --</p> */}
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium mb-1">
@@ -405,194 +411,38 @@ export default function TrackingOrderPage() {
               </p>
               <p>{booking?.product_book}</p>
             </div>
-          </div>
-
-          <div className="border rounded-lg p-4 mb-6">
-            <p className="font-semibold text-base mb-4">Package Information</p>
-            <div className="grid gap-6 text-sm">
-              {BOOKING_DATA?.map((item) => {
-                const actual = actualValuesMap[item.id] || {
-                  weight: "",
-                  quantity: "",
-                  "unit weight": "",
-                };
-
-                return (
-                  <div
-                    key={item.id}
-                    className="border p-4 rounded-md relative min-h-[220px]"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-                        <div>
-                          <p className="text-gray-500">Tracking ID</p>
-                          <p className="font-medium">{code}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Quantity</p>
-                          <p className="font-medium">{item.quantity} items</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Gross Weight</p>
-                          <p className="font-medium">{item.weight}kg</p>
-                        </div>
-
-                        <div>
-                          <p className="text-gray-500">Unit Weight</p>
-                          <p className="font-medium">{item.unit_weight} kg</p>
-                        </div>
-                      </div>
-                      <div className="ml-4 min-w-[120px]">
-                        {validatingItems.has(item.id) ? (
-                          <div className="flex items-center gap-1 text-sm text-blue-600">
-                            <Spinner />
-                            <span>Validating...</span>
-                          </div>
-                        ) : getItemStatus(item.id) !== "" ? (
-                          <span
-                            className={`text-sm font-medium px-3 py-1 rounded-full ${getStatusColor(
-                              item.id
-                            )}`}
-                          >
-                            {getItemStatus(item.id)}
-                          </span>
-                        ) : (
-                          <div className="h-6" />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                      {["quantity", "weight", "unit weight"].map((field) => (
-                        <InputField
-                          key={field}
-                          label={`Actual ${field}`}
-                          name={`${field}-${item.id}`}
-                          value={actual[field as keyof typeof actual]}
-                          onChange={(value) =>
-                            handleItemFieldChange(item.id, field, value)
-                          }
-                          className={getInputStyle(item.id, field)}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        onClick={() => validateItem(item.id)}
-                        disabled={validatingItems.has(item.id)}
-                        className="bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
-                      >
-                        {validatingItems.has(item.id) ? (
-                          <span className="flex items-center gap-2">
-                            <Spinner /> Validating...
-                          </span>
-                        ) : (
-                          "Validate Item"
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 flex gap-4 items-center">
-              {allApproved ? (
-                <Button
-                  onClick={handleCreateLabel}
-                  loading={isCreatingLabel}
-                  title="Confirm and Create Label"
-                  variant="primary"
-                />
-              ) : (
-                <>
-                  <Button
-                    title="Raise Exception"
-                    onClick={handleRaiseException}
-                    loading={isCreatingException}
-                    variant="danger"
-                    disabled={!hasValidatedAnyItem || isCreatingException}
-                  />
-                  {!hasValidatedAnyItem && (
-                    <div className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
-                      Please validate at least one item first
-                    </div>
-                  )}
-                  <button className="border border-gray-700 text-gray-800 text-sm px-4 py-2 rounded">
-                    Return To Sender
-                  </button>
-                </>
-              )}
+            <div className="absolute bottom-4 right-4">
+              <button
+                onClick={() => {
+                  setLegDetails(booking?.leg_details || []);
+                  setIsLegsModalOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md"
+              >
+                View Legs
+              </button>
             </div>
           </div>
-          <div className="border rounded-lg p-4 mb-6">
-            <p className="font-semibold text-base mb-4">Shipping Labels</p>
 
-            {booking?.BookingLabels?.length ? (
-              <div className="grid gap-4">
-                {booking.BookingLabels.map((label) => {
-                  const statusColor =
-                    {
-                      created: "bg-green-100 text-green-800",
-                      processing: "bg-blue-100 text-blue-800",
-                      error: "bg-red-100 text-red-800",
-                      cancelled: "bg-gray-100 text-gray-800",
-                    }[label.status.toLowerCase()] ||
-                    "bg-gray-100 text-gray-800";
-
-                  return (
-                    <div key={label.id} className="border p-4 rounded-md">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-gray-500">Courier</p>
-                          <p className="font-medium">{label.courier}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Status</p>
-                          <span
-                            className={`font-medium capitalize px-2 py-1 rounded-full text-xs ${statusColor}`}
-                          >
-                            {label.status}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Tracking Number</p>
-                          <p className="font-medium">
-                            {label.tracking_codes?.[0] || "Not available"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Type</p>
-                          <p className="font-medium">{label.type}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Created</p>
-                          <p className="font-medium">
-                            {new Date(label.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            onClick={() =>
-                              handleDownloadLabel(label.uri, label.id)
-                            }
-                            className="inline-block px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-                          >
-                            Download PDF
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                No labels generated yet
-              </div>
-            )}
-          </div>
+          <PackageInformation
+            bookingData={BOOKING_DATA}
+            code={code as string}
+            actualValuesMap={actualValuesMap}
+            validatingItems={validatingItems}
+            validationStatus={validationStatus}
+            allApproved={allApproved}
+            hasValidatedAnyItem={hasValidatedAnyItem}
+            onFieldChange={handleItemFieldChange}
+            onValidateItem={validateItem}
+            onCreateLabel={handleCreateLabel}
+            onRaiseException={handleRaiseException}
+            isCreatingLabel={isCreatingLabel}
+            isCreatingException={isCreatingException}
+          />
+          <ShippingLabels
+            labels={booking?.BookingLabels}
+            onDownloadLabel={handleDownloadLabel}
+          />
         </div>
       </div>
 
@@ -607,6 +457,11 @@ export default function TrackingOrderPage() {
         slug={exceptionData.slug}
         isApproving={isValidating}
         mismatchedItems={exceptionData.mismatchedItems}
+      />
+      <LegsModal
+        isOpen={isLegsModalOpen}
+        closeModal={() => setIsLegsModalOpen(false)}
+        legs={legDetails}
       />
     </UserDashboardWrapper>
   );

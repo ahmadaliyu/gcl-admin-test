@@ -600,15 +600,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
               <th className="min-w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Order ID
               </th>
-              <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {/* <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Customer
-              </th>
-              <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </th> */}
+              {/* <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
-              </th>
-              <th className="min-w-[120px] hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </th> */}
+              {/* <th className="min-w-[120px] hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Company
-              </th>
+              </th> */}
               <th className="min-w-[100px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
@@ -632,15 +632,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
                 <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
                   {order.code}
                 </td>
-                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                {/* <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
                   Name
-                </td>
-                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                </td> */}
+                {/* <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
                   {order.sender_address_id}
-                </td>
-                <td className="hidden md:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                </td> */}
+                {/* <td className="hidden md:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
                   N/A
-                </td>
+                </td> */}
                 <td className="px-4 py-3">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

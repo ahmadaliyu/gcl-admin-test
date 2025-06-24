@@ -1,30 +1,25 @@
-import { Cross1Icon, CrossCircledIcon } from '@radix-ui/react-icons';
-import React, { useEffect } from 'react';
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
-function Alert({ message, type = 'error', onClose }: { message: string; type?: 'success' | 'error'; onClose?: any }) {
-  const noMessage = !message || !message?.length || !message?.trim()?.length || typeof message !== 'string';
-
-  useEffect(() => {
-    if (!noMessage) {
-      setTimeout(() => {
-        onClose?.();
-      }, 4000);
-    }
-  }, [noMessage]);
-
-  if (noMessage) return null;
+export default function Alert({
+  message,
+  type = "info",
+}: {
+  message: string;
+  type?: "success" | "error" | "info" | "warning";
+}) {
+  const typeStyles = {
+    success: "bg-green-100 text-green-800 border-green-300",
+    error: "bg-red-100 text-red-800 border-red-300",
+    warning: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    info: "bg-blue-100 text-blue-800 border-blue-300",
+  };
 
   return (
-    <div className="w-full py-[8px] text-[#FF0000] bg-[#FFEAEA] flex items-center justify-center gap-[12px] mb-[24px] rounded-[4px] px-[30px] relative">
-      <img src="/icons/info-circle-red.svg" alt="error" />
-      <span className="text-[13px] leading-[24px] text-center">{message}</span>
-      {typeof onClose === 'function' ? (
-        <button className="absolute top-[-5px] right-[-5px]" onClick={() => onClose?.()}>
-          <CrossCircledIcon />
-        </button>
-      ) : null}
+    <div
+      className={`p-4 border rounded-lg shadow ${typeStyles[type]} flex items-center gap-2`}
+    >
+      <span>{message}</span>
+      <XMarkIcon className="w-4 h-4" />
     </div>
   );
 }
-
-export default Alert;

@@ -1,20 +1,21 @@
-'use client';
-import React, { ReactNode, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import NextTopLoader from 'nextjs-toploader';
-import Navbar from '@/components/layout/main/navbar';
-import Footer from '@/components/layout/main/footer';
-import { Toaster } from '@/components/ui/sonner';
-import { AppThemeProvider } from '@/providers/theme-provider';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { persistor, store } from '@/store/store';
+"use client";
+import React, { ReactNode, useState } from "react";
+import { usePathname } from "next/navigation";
+import NextTopLoader from "nextjs-toploader";
+import Navbar from "@/components/layout/main/navbar";
+import Footer from "@/components/layout/main/footer";
+import { Toaster } from "@/components/ui/sonner";
+import { AppThemeProvider } from "@/providers/theme-provider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { persistor, store } from "@/store/store";
+import { AlertProvider } from "@/components/reuseables/Alert/alert-context";
 
 function Initializers({ children }: { children: ReactNode }) {
-  const isAuthPage = (usePathname() || '')?.startsWith('/auth/');
-  const isUserPage = (usePathname() || '')?.startsWith('/user/');
+  const isAuthPage = (usePathname() || "")?.startsWith("/auth/");
+  const isUserPage = (usePathname() || "")?.startsWith("/user/");
   const hideFooter = isAuthPage || isUserPage ? true : false;
 
   const queryClient = new QueryClient({
@@ -32,11 +33,13 @@ function Initializers({ children }: { children: ReactNode }) {
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
           <AppThemeProvider>
-            <NextTopLoader color="#000000" height={3} />
-            <Navbar fixed={isUserPage ? false : true} />
-            {children}
-            {/* {hideFooter ? null : <Footer />} */}
-            <Toaster richColors />
+            <AlertProvider>
+              <NextTopLoader color="#000000" height={3} />
+              <Navbar fixed={isUserPage ? false : true} />
+              {children}
+              {/* {hideFooter ? null : <Footer />} */}
+              <Toaster richColors />
+            </AlertProvider>
           </AppThemeProvider>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
