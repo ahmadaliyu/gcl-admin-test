@@ -186,35 +186,43 @@ export default function PackageInformation({
         })}
       </div>
 
-      <div className="mt-6 flex gap-4 items-center relative justify-between">
+       <div className="mt-6 flex flex-col md:flex-row gap-4 md:items-center justify-between relative">
         {allApproved ? (
           <Button
             onClick={onCreateLabel}
             loading={isCreatingLabel}
             title="Confirm and Create Label"
             variant="primary"
+            className="w-full md:w-auto"
           />
         ) : (
-          <>
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto relative">
             <Button
               title="Raise Exception"
               onClick={onRaiseException}
               loading={isCreatingException}
               variant="danger"
               disabled={!hasValidatedAnyItem || isCreatingException}
+              className="w-full md:w-auto"
             />
             {!hasValidatedAnyItem && (
-              <div className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+              <div className="absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
                 Please validate at least one item first
               </div>
             )}
-            <Button title="Return To Sender" variant="outlined" />
-          </>
+            {/* <Button
+              title="Return To Sender"
+              variant="outlined"
+              className="w-full md:w-auto"
+            /> */}
+          </div>
         )}
+
         <Button
           onClick={onViewLabels}
           title="View Labels"
           variant="secondary"
+          className="w-full md:w-auto"
         />
       </div>
     </div>
