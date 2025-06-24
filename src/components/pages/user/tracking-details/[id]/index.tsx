@@ -109,7 +109,7 @@ const TrackingDetails = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+        <div className="grid grid-cols-1 mArrowLeftIcond:grid-cols-2 gap-8 mt-6">
           <div className="space-y-6 border-l-2 border-red-600 pl-4 relative">
             {combinedStatuses.map((item, index) => {
               const colorClass =

@@ -5,7 +5,6 @@ import { OrdersResponse } from "./types";
 export const useGetBooking = (onSuccess?: (data: any) => void) => {
   return useQuery<OrdersResponse, Error>({
     queryKey: ["bookings"],
-    refetchInterval: 5000,
 
     queryFn: async (): Promise<OrdersResponse> => {
       const response: OrdersResponse = await get(`admin/bookings`);

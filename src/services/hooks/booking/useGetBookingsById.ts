@@ -8,7 +8,7 @@ export const useGetBookingById = (
 ) => {
   return useQuery<BookingByIdResponse, Error>({
     queryKey: ["bookings", bookingId],
-    refetchInterval: 5000,
+    // refetchInterval: 5000,
 
     queryFn: async (): Promise<BookingByIdResponse> => {
       const response: BookingByIdResponse = await get(
