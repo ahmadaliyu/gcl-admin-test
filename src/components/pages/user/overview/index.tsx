@@ -556,9 +556,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-900">ORDER ID</p>
-                <p className="text-xs text-gray-500">
-                  {order.code.substring(0, 6)}...
-                </p>
+                <p className="text-xs text-gray-500">{order.code}</p>
               </div>
               <span
                 className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -571,14 +569,14 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <div>
+              {/* <div>
                 <p className="text-gray-500">Email</p>
                 <p>{order.sender_address_id.substring(0, 10)}...</p>
-              </div>
-              <div>
+              </div> */}
+              {/* <div>
                 <p className="text-gray-500">Company</p>
                 <p>N/A</p>
-              </div>
+              </div> */}
               <div>
                 <p className="text-gray-500">Arrival</p>
                 <p>{order.updatedAt}</p>
