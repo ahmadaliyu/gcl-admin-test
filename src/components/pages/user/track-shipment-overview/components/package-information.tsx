@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Button from "@/components/reuseables/Button";
 import Spinner from "@/components/reuseables/Spinner";
 import { BookingItem } from "@/services";
@@ -51,6 +52,7 @@ interface PackageInformationProps {
   onValidateItem: (itemId: string) => void;
   onCreateLabel: () => void;
   onRaiseException: () => void;
+  onViewLabels: () => void;
   isCreatingLabel: boolean;
   isCreatingException: boolean;
 }
@@ -67,6 +69,7 @@ export default function PackageInformation({
   onValidateItem,
   onCreateLabel,
   onRaiseException,
+  onViewLabels,
   isCreatingLabel,
   isCreatingException,
 }: PackageInformationProps) {
@@ -166,7 +169,7 @@ export default function PackageInformation({
                 ))}
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-end gap-3">
                 <Button
                   onClick={() => onValidateItem(item.id)}
                   disabled={validatingItems.has(item.id)}
@@ -176,7 +179,6 @@ export default function PackageInformation({
                       : "Validate Item"
                   }
                   variant="primary"
-                  //   icon={validatingItems.has(item.id) ? <Spinner /> : undefined}
                 />
               </div>
             </div>
@@ -184,7 +186,7 @@ export default function PackageInformation({
         })}
       </div>
 
-      <div className="mt-6 flex gap-4 items-center relative">
+      <div className="mt-6 flex gap-4 items-center relative justify-between">
         {allApproved ? (
           <Button
             onClick={onCreateLabel}
@@ -209,6 +211,11 @@ export default function PackageInformation({
             <Button title="Return To Sender" variant="outlined" />
           </>
         )}
+        <Button
+          onClick={onViewLabels}
+          title="View Labels"
+          variant="secondary"
+        />
       </div>
     </div>
   );

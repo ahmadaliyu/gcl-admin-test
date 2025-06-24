@@ -1,7 +1,6 @@
 "use client";
 
 import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrapper";
-import Button from "@/components/reuseables/Button";
 import DashboardSkeleton from "@/components/ui/dashboard-skeleton";
 import {
   LegDetail,
@@ -13,10 +12,10 @@ import {
 } from "@/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import ExceptionModal, { InputField } from "../components/exception-modal";
+import ExceptionModal from "../components/exception-modal";
 import LegsModal from "../components/leg-detail-modal";
-import ShippingLabels from "../components/shipping-labels";
 import PackageInformation from "../components/package-information";
+import ShippingLabelsModal from "../components/shipping-labels-modal";
 
 const Spinner = () => (
   <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
@@ -52,6 +51,7 @@ export default function TrackingOrderPage() {
 
   const [isLegsModalOpen, setIsLegsModalOpen] = useState<boolean>(false);
   const [legDetails, setLegDetails] = useState<LegDetail[]>([]);
+  const [open, setOpen] = useState(false);
 
   const booking = data?.data?.booking;
   const labelId = data?.data?.booking?.BookingLabels[0]?.id;
@@ -160,34 +160,6 @@ export default function TrackingOrderPage() {
         mismatchedFields: result.mismatchedFields || [],
       },
     }));
-  };
-
-  const getInputStyle = (itemId: string, field: string) => {
-    const status = validationStatus[itemId];
-    if (!status || status.status === "pending")
-      return "border-gray-300 bg-white";
-    if (
-      status.status === "mismatch" &&
-      status.mismatchedFields?.includes(field)
-    )
-      return "border-red-500 bg-red-50";
-    if (status.status === "approved") return "border-green-500 bg-green-50";
-    return "border-gray-300";
-  };
-
-  const getItemStatus = (itemId: string) => {
-    const status = validationStatus[itemId];
-    if (!status) return "";
-    return status.status === "approved" ? "Verified" : "Mismatch";
-  };
-
-  const getStatusColor = (itemId: string) => {
-    const status = validationStatus[itemId];
-    if (!status || status.status === "pending")
-      return "bg-yellow-100 text-yellow-800";
-    return status.status === "approved"
-      ? "bg-green-100 text-green-800"
-      : "bg-red-100 text-red-800";
   };
 
   const [hasValidatedAnyItem, setHasValidatedAnyItem] = useState(false);
@@ -378,7 +350,6 @@ export default function TrackingOrderPage() {
               Track Order
             </button>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-lg p-4 mb-6 relative">
             <div>
               <p className="text-sm text-gray-500 font-medium mb-1">
@@ -423,7 +394,6 @@ export default function TrackingOrderPage() {
               </button>
             </div>
           </div>
-
           <PackageInformation
             bookingData={BOOKING_DATA}
             code={code as string}
@@ -438,14 +408,17 @@ export default function TrackingOrderPage() {
             onRaiseException={handleRaiseException}
             isCreatingLabel={isCreatingLabel}
             isCreatingException={isCreatingException}
-          />
-          <ShippingLabels
-            labels={booking?.BookingLabels}
-            onDownloadLabel={handleDownloadLabel}
+            onViewLabels={() => setOpen(true)}
           />
         </div>
       </div>
 
+      <ShippingLabelsModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        labels={booking?.BookingLabels}
+        onDownloadLabel={handleDownloadLabel}
+      />
       <ExceptionModal
         isOpen={isExceptionModalOpen}
         onClose={() => setIsExceptionModalOpen(false)}

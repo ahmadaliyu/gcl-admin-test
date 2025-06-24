@@ -22,8 +22,6 @@ export const useSignIn = (onSuccess?: (data: any) => void) => {
       return post("auth/login", payload);
     },
     onSuccess: async (response: LoginResponse) => {
-      console.log(response, "hmm");
-
       if (response?.status === 401) {
         alert(`${response?.data?.message}`);
         return;
