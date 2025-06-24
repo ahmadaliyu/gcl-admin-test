@@ -117,8 +117,8 @@ export default function PackageInformation({
               key={item.id}
               className="border p-4 rounded-md relative min-h-[220px]"
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-2">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1">
                   <div>
                     <p className="text-gray-500">Tracking ID</p>
                     <p className="font-medium">{code}</p>
@@ -136,7 +136,7 @@ export default function PackageInformation({
                     <p className="font-medium">{item.unit_weight} kg</p>
                   </div>
                 </div>
-                <div className="ml-4 min-w-[120px]">
+                <div className="ml-0 md:ml-4 min-w-[120px]">
                   {validatingItems.has(item.id) ? (
                     <div className="flex items-center gap-1 text-sm text-blue-600">
                       <Spinner />
@@ -156,7 +156,7 @@ export default function PackageInformation({
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 {["quantity", "weight", "unit weight"].map((field) => (
                   <InputField
                     key={field}
@@ -169,7 +169,7 @@ export default function PackageInformation({
                 ))}
               </div>
 
-              <div className="mt-4 flex justify-end gap-3">
+              <div className="mt-4 flex justify-end md:justify-end gap-3">
                 <Button
                   onClick={() => onValidateItem(item.id)}
                   disabled={validatingItems.has(item.id)}
@@ -179,6 +179,7 @@ export default function PackageInformation({
                       : "Validate Item"
                   }
                   variant="primary"
+                  className="w-full md:w-auto"
                 />
               </div>
             </div>
@@ -186,7 +187,7 @@ export default function PackageInformation({
         })}
       </div>
 
-       <div className="mt-6 flex flex-col md:flex-row gap-4 md:items-center justify-between relative">
+      <div className="mt-6 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between relative">
         {allApproved ? (
           <Button
             onClick={onCreateLabel}
