@@ -1,209 +1,213 @@
-import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrapper";
 import React, { useMemo, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useGetBooking } from "@/services";
-import OrderDetailsModal from "@/components/reuseables/OrderDetailModal";
+import { Booking, useGetBooking } from "@/services";
 import DashboardSkeleton from "@/components/ui/dashboard-skeleton";
+import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
+import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrapper";
+import { formatType } from "@/lib/formatType";
+
+const STATUS_COLORS: Record<string, string> = {
+  paid: "bg-green-100 text-green-800",
+  delivered: "bg-blue-100 text-blue-800",
+  cancelled: "bg-red-100 text-red-800",
+};
+
+const DATE_FILTERS = ["All", "Today", "7 Days Ago", "Last Week", "Last Month"];
+const STATUS_OPTIONS = ["All", "Paid", "Delivered", "Cancelled"];
 
 function OrdersShipment() {
-  // const [activeTab, setActiveTab] = useState<TabIds>(TabIds.All);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [bookingId, setBookingId] = useState("");
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-
+  const [dateFilter, setDateFilter] = useState("All");
   const { data, isLoading } = useGetBooking();
+  const router = useRouter();
 
-  const filteredBookings = useMemo(() => {
-    if (!data?.data?.bookings) return [];
+  const orders = useMemo(() => data?.data?.bookings || [], [data]);
 
-    return data.data.bookings.filter((booking) => {
-      if (statusFilter !== "All") {
-        return booking.status === statusFilter;
-      }
-      return true;
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const searchLower = search.toLowerCase();
+      const matchesSearch =
+        order.code.toLowerCase().includes(searchLower) ||
+        order.status.toLowerCase().includes(searchLower) ||
+        `${order.origin} - ${order.destination}`
+          .toLowerCase()
+          .includes(searchLower);
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        order.status.toLowerCase() === statusFilter.toLowerCase();
+
+      const updatedDate = dayjs(order.updatedAt);
+      const now = dayjs();
+
+      const matchesDate =
+        dateFilter === "All" ||
+        (dateFilter === "Today" && updatedDate.isSame(now, "day")) ||
+        (dateFilter === "7 Days Ago" &&
+          updatedDate.isAfter(now.subtract(7, "day"))) ||
+        (dateFilter === "Last Week" &&
+          updatedDate.isAfter(now.subtract(1, "week"))) ||
+        (dateFilter === "Last Month" &&
+          updatedDate.isAfter(now.subtract(1, "month")));
+
+      return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [data, statusFilter]);
+  }, [orders, search, statusFilter, dateFilter]);
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
+  if (isLoading) return <DashboardSkeleton />;
 
   return (
     <UserDashboardWrapper>
-      <h1 className="text-[#272727] font-[600] text-[24px] mb-[56px]">
-        My Bookings
-      </h1>
+      <div className="space-y-6">
+        <h2 className="text-lg md:text-xl font-semibold mb-4">My Bookings</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <input
+            type="text"
+            placeholder="Search by Order ID, Status or Route"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full sm:max-w-xs px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-      {/* Commented Tabs */}
-      {/* <div className="flex justify-start mb-[24px] border-b-[#E3E3E3] border-b">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`w-[185px] py-[12px] text-[12px] font-medium text-[#272727] ${
-              activeTab === tab.id
-                ? "bg-[#FCE8E9] border-b-[3px] border-[#E51520] font-[600]"
-                : "bg-transparent border-b-[3px] border-transparent font-[400]"
-            }`}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {tab.title}
-          </button>
-        ))}
-      </div> */}
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
 
-      <div className="w-full flex flex-wrap gap-4 md:gap-6 mb-4">
-        <div className="w-full sm:w-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full sm:w-auto flex border gap-2 border-[#CCCCCC] bg-[#F7F7F7] rounded-[8px] h-[40px] items-center justify-center px-6">
-                <span>Filter by Status</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[180px] rounded-[16px] p-2">
-              <DropdownMenuLabel>Status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                {[
-                  "All",
-                  "paid",
-                  "transit",
-                  "delivered",
-                  "cancelled",
-                  "Clearance in Progress",
-                ].map((status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                  >
-                    <span>{status}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {DATE_FILTERS.map((filter) => (
+              <option key={filter} value={filter}>
+                {filter}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Placeholder - you can add Date filter logic later */}
-        <div className="w-full sm:w-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full sm:w-auto flex border gap-2 border-[#CCCCCC] bg-[#F7F7F7] rounded-[8px] h-[40px] items-center justify-center px-6">
-                <span>Filter by Date</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[180px] rounded-[16px] p-2">
-              <DropdownMenuLabel>Date Filter</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <span>Today</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>This Week</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>This Month</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Mobile View */}
+        <div className="sm:hidden space-y-4">
+          {filteredOrders.map((order, index) => (
+            <div
+              key={`${order.id}-${index}`}
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                router.push(`/user/track-shipment-overview/${order.id}`)
+              }
+              className="bg-white p-4 rounded-lg shadow hover:shadow-md hover:translate-y-[-2px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Customer</p>
+                  <p className="text-xs text-gray-500">{`${order.User?.first_name} ${order.User?.last_name}`}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">ORDER ID</p>
+                  <p className="text-xs text-gray-500">{order.code}</p>
+                </div>
+                <span
+                  className={`px-2 inline-flex text-xs font-semibold rounded-full ${
+                    STATUS_COLORS[order.status.toLowerCase()] ||
+                    "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {formatType(order.status)}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <p className="text-gray-500">Email</p>
+                  <p>{order.User.email}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Arrival</p>
+                  <p>{dayjs(order.updatedAt).format("MMM D, YYYY")}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Route</p>
+                  <p>{`${order.origin} - ${order.destination}`}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
 
-      <div>
-        <Table className="mb-[100px] mt-[16px]">
-          <TableHeader>
-            <TableRow className="bg-[#FCE8E9] hover:bg-[#FCE8E9]">
-              {["Order ID", "Status", "Created Date"].map((header) => (
-                <TableHead
-                  key={header}
-                  className="text-[#272727] font-medium text-[14px] py-[16px] px-[8px]"
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="min-w-full table-auto divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Order ID
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Arrival
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Route
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredOrders.map((order, index) => (
+                <tr
+                  key={`${order.id}-${index}`}
+                  onClick={() =>
+                    router.push(`/user/track-shipment-overview/${order.id}`)
+                  }
+                  className="cursor-pointer hover:bg-gray-50"
                 >
-                  {header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {filteredBookings.length > 0 ? (
-              filteredBookings.map((service) => (
-                <TableRow
-                  onClick={() => {
-                    setIsModalOpen(true);
-                    setBookingId(String(service?.id));
-                  }}
-                  key={String(service.id)}
-                  className="cursor-pointer"
-                >
-                  <TableCell className="border-b border-b-[#E3E3E3] font-medium py-[30px] px-[8px]">
-                    {service.code || "N/A"}
-                  </TableCell>
-
-                  <TableCell className="border-b border-b-[#E3E3E3] py-[30px] px-[8px]">
-                    <div
-                      className={`inline-flex border h-[32px] items-center justify-center font-medium px-[10px] rounded-[32px] text-[12px] whitespace-nowrap ${
-                        service.status?.toLowerCase() === "transit"
-                          ? "bg-[#FFF6C5] border-[#BB5802] text-[#BB5802]"
-                          : service.status?.toLowerCase() === "delivered"
-                          ? "bg-[#EAF0F6] border-[#02044A] text-[#02044A]"
-                          : service.status?.toLowerCase() === "cancelled"
-                          ? "bg-[#FCE8E9] border-[#E51520] text-[#E51520]"
-                          : service.status?.toLowerCase() === "paid"
-                          ? "bg-[#F4F4F4] border-[#A0A0A0] text-[#333333]"
-                          : service.status?.toLowerCase() ===
-                            "clearance in progress"
-                          ? "bg-[#D1E9FF] border-[#1570EF] text-[#175CD3]"
-                          : "bg-[#F4F4F4] border-[#A0A0A0] text-[#333333]"
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    {`${order.User?.first_name} ${order.User?.last_name}`}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    {order.code}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    {order.User.email}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 inline-flex text-xs font-semibold rounded-full ${
+                        STATUS_COLORS[order.status.toLowerCase()] ||
+                        "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {service.status || "N/A"}
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="border-b border-b-[#E3E3E3] font-medium py-[30px] px-[8px]">
-                    {new Date(service.createdAt).toLocaleDateString()}
-                  </TableCell>
-
-                  {/* <TableCell className="border-b border-b-[#E3E3E3] py-[30px] px-[8px] text-sm text-[#636363]">
-                    View
-                  </TableCell> */}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  No bookings found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                      {formatType(order.status)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    {dayjs(order.updatedAt).format("MMM D, YYYY")}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-900">
+                    {`${order.origin} - ${order.destination}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      {isModalOpen && (
-        <OrderDetailsModal
-          bookingId={bookingId}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
-      )}
     </UserDashboardWrapper>
   );
 }

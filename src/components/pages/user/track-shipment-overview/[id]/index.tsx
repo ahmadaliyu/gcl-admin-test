@@ -255,7 +255,9 @@ export default function TrackingOrderPage() {
   };
 
   const handleCreateLabel = () => {
-    if (!booking?.id || !labelId) return;
+    console.log(booking?.id, labelId);
+
+    if (!booking?.id) return;
     createLabel({ labelId: booking?.id });
   };
 

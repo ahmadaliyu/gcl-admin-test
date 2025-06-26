@@ -135,22 +135,18 @@ export interface BookingByIdResponse {
   data: BookingData;
 }
 
-interface ParcelItem {
-  description: string;
-  sku: string;
-  quantity: number;
-  weight: number;
-  unit_weight: string;
-  weight_unit: string;
-  hs_code: string;
+export interface Orders {
+  bookings: BookingData[];
 }
 
-interface Parcel {
-  description: string;
-  items: ParcelItem[];
+export interface BookingResponse {
+  success: boolean;
+  data: {
+    bookings: Booking[];
+  };
 }
 
-interface Booking {
+export interface Booking {
   id: string;
   user_id: string;
   service_id: string;
@@ -166,26 +162,32 @@ interface Booking {
   product_qty: string;
   origin: string;
   origin_postcode: string;
+  origin_country_iso: string;
   destination: string;
   destination_postcode: string;
+  destination_country_iso: string;
   is_insured: boolean;
   has_protection: boolean;
   is_sign_required: boolean;
   print_type: string;
   amount: number;
-  parcel: string | Parcel[]; // Can be string or parsed Parcel array
   status: string;
   comment: string | null;
+  leg_details: string; // Raw JSON string
   createdAt: string;
   updatedAt: string;
+  User: User;
+  Service: Service;
 }
 
-export interface Orders {
-  // bookings: Booking[];
-  bookings: BookingData[];
+export interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
 }
 
-export interface OrdersResponse {
-  success: boolean;
-  data: Orders;
+export interface Service {
+  id: string;
+  name: string;
 }

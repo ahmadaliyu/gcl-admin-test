@@ -1,6 +1,7 @@
 import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrapper";
 import DashboardSkeleton from "@/components/ui/dashboard-skeleton";
-import { useGetBooking } from "@/services";
+import { Booking, Service, useGetBooking } from "@/services";
+import { User } from "@/types";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { FiTrendingUp, FiTrendingDown } from "react-icons/fi";
@@ -13,29 +14,14 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import dayjs from "dayjs";
 
 const DashboardOverview = () => {
   const { data, isPending } = useGetBooking();
 
-  const orders = useMemo<Order[]>(() => {
-    return (
-      data?.data?.bookings?.map((booking: any) => ({
-        id: booking.id ?? "",
-        user_id: booking.user_id ?? "",
-        service_id: booking.service_id ?? "",
-        sender_address_id: booking.sender_address_id ?? "",
-        recipient_address_id: booking.recipient_address_id ?? "",
-        code: booking.code ?? "",
-        status: booking.status ?? "",
-        origin: booking.origin ?? "",
-        destination: booking.destination ?? "",
-        updatedAt: booking.updatedAt ?? "",
-        // Add other fields as needed
-      })) || []
-    );
+  const orders = useMemo(() => {
+    return data?.data?.bookings || [];
   }, [data]);
-
-  console.log(orders, 96633);
 
   if (isPending) {
     return <DashboardSkeleton />;
@@ -473,54 +459,40 @@ const SpendChart = () => {
   );
 };
 
-interface Order {
-  id: string;
-  user_id: string;
-  service_id: string;
-  sender_address_id: string;
-  recipient_address_id: string;
-  code: string;
-  status: string;
-  origin: string;
-  destination: string;
-  updatedAt: string;
-  // Add other fields as needed
-}
+const getStatusBadgeClass = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "paid":
+      return "bg-green-100 text-green-800";
+    case "delivered":
+      return "bg-blue-100 text-blue-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-yellow-100 text-yellow-800";
+  }
+};
 
-interface OrdersTableProps {
-  orders?: Order[];
-}
-// Orders Table Component
-
-interface Order {
-  id: string;
-  code: string;
-  status: string;
-  sender_address_id: string;
-  updatedAt: string;
-  origin: string;
-  destination: string;
-}
-
-interface OrdersTableProps {
-  orders?: Order[];
-}
-
-const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
+const OrdersTable: React.FC<{ orders?: Booking[] }> = ({ orders = [] }) => {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const searchLower = search.toLowerCase();
-      return (
-        order.code.toLowerCase().includes(searchLower) ||
-        order.status.toLowerCase().includes(searchLower) ||
-        `${order.origin} - ${order.destination}`
-          .toLowerCase()
-          .includes(searchLower)
-      );
-    });
+  const filteredOrders = useMemo<Booking[]>(() => {
+    const today = dayjs().startOf("day");
+    return orders
+      .filter((order) => {
+        const updatedDate = dayjs(order.updatedAt);
+        return updatedDate.isSame(today, "day");
+      })
+      .filter((order) => {
+        const searchLower = search.toLowerCase();
+        return (
+          order.code.toLowerCase().includes(searchLower) ||
+          order.status.toLowerCase().includes(searchLower) ||
+          `${order.origin} - ${order.destination}`
+            .toLowerCase()
+            .includes(searchLower)
+        );
+      });
   }, [search, orders]);
 
   return (
@@ -555,31 +527,29 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
           >
             <div className="flex justify-between items-start">
               <div>
+                <p className="text-sm font-medium text-gray-900">Customer</p>
+                <p className="text-xs text-gray-500">{`${order.User?.first_name} ${order.User?.last_name}`}</p>
+              </div>
+              <div>
                 <p className="text-sm font-medium text-gray-900">ORDER ID</p>
                 <p className="text-xs text-gray-500">{order.code}</p>
               </div>
               <span
-                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  order.status === "Delivered"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                  order.status
+                )}`}
               >
                 {order.status}
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              {/* <div>
+              <div>
                 <p className="text-gray-500">Email</p>
-                <p>{order.sender_address_id.substring(0, 10)}...</p>
-              </div> */}
-              {/* <div>
-                <p className="text-gray-500">Company</p>
-                <p>N/A</p>
-              </div> */}
+                <p>{order.User.email}</p>
+              </div>
               <div>
                 <p className="text-gray-500">Arrival</p>
-                <p>{order.updatedAt}</p>
+                <p>{dayjs(order.updatedAt).format("YYYY-MM-DD HH:mm")}</p>
               </div>
               <div>
                 <p className="text-gray-500">Route</p>
@@ -595,18 +565,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
         <table className="min-w-full table-auto divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
               <th className="min-w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Order ID
               </th>
-              {/* <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer
-              </th> */}
-              {/* <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
-              </th> */}
-              {/* <th className="min-w-[120px] hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Company
-              </th> */}
+              </th>
               <th className="min-w-[100px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
@@ -628,30 +595,25 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders = [] }) => {
                 className="cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  {`${order.User?.first_name} ${order.User?.last_name}`}
+                </td>
+                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
                   {order.code}
                 </td>
-                {/* <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  Name
-                </td> */}
-                {/* <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {order.sender_address_id}
-                </td> */}
-                {/* <td className="hidden md:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  N/A
-                </td> */}
+                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                  {order.User.email}
+                </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      order.status === "Delivered"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                      order.status
+                    )}`}
                   >
                     {order.status}
                   </span>
                 </td>
                 <td className="hidden lg:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {order.updatedAt}
+                  {dayjs(order.updatedAt).format("YYYY-MM-DD HH:mm")}
                 </td>
                 <td className="hidden xl:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
                   {`${order.origin} - ${order.destination}`}
