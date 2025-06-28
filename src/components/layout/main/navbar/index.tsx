@@ -11,6 +11,7 @@ import LogoutModal from "../modal/LogoutModal";
 import { resetBooking } from "@/store/booking/bookingSlice";
 import { clearQuote } from "@/store/auth/quoteDataSlice";
 import { clearQuotesData } from "@/store/auth/quoteSlice";
+import Cookies from "js-cookie";
 
 const chevron_down = (
   <svg
@@ -284,6 +285,8 @@ const NavbarMain = ({ fixed }: { fixed?: boolean }) => {
   const handleLogout = () => {
     dispatch(resetUser());
     setShowLogoutModal(false);
+    Cookies.remove("token");
+    Cookies.remove("refresh_token");
     router.replace("/");
   };
 
