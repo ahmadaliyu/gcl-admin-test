@@ -508,102 +508,44 @@ const OrdersTable: React.FC<{ orders?: Booking[] }> = ({ orders = [] }) => {
         />
       </div>
 
-      {/* Mobile View */}
-      <div className="sm:hidden space-y-4">
-        {filteredOrders.map((order, index) => (
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() =>
-              router.push(`/user/track-shipment-overview/${order.id}`)
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                router.push(`/user/track-shipment-overview/${order.id}`);
-              }
-            }}
-            key={`${order.id}-${index}`}
-            className="bg-white p-4 rounded-lg shadow transition hover:shadow-md hover:translate-y-[-2px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-900">Customer</p>
-                <p className="text-xs text-gray-500">{`${order.User?.first_name} ${order.User?.last_name}`}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">ORDER ID</p>
-                <p className="text-xs text-gray-500">{order.code}</p>
-              </div>
-              <span
-                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
-                  order.status
-                )}`}
-              >
-                {order.status}
-              </span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <p className="text-gray-500">Email</p>
-                <p>{order.User.email}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Arrival</p>
-                <p>{dayjs(order.updatedAt).format("YYYY-MM-DD HH:mm")}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Route</p>
-                <p>{`${order.origin} - ${order.destination}`}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Desktop Table View */}
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="min-w-full table-auto divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer
-              </th>
-              <th className="min-w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order ID
-              </th>
-              <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="min-w-[100px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="min-w-[160px] hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Arrival
-              </th>
-              <th className="min-w-[200px] hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Route
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500 text-lg">
+            There are no recent orders today
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Mobile View */}
+          <div className="sm:hidden space-y-4">
             {filteredOrders.map((order, index) => (
-              <tr
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() =>
                   router.push(`/user/track-shipment-overview/${order.id}`)
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    router.push(`/user/track-shipment-overview/${order.id}`);
+                  }
+                }}
                 key={`${order.id}-${index}`}
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                className="bg-white p-4 rounded-lg shadow transition hover:shadow-md hover:translate-y-[-2px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {`${order.User?.first_name} ${order.User?.last_name}`}
-                </td>
-                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {order.code}
-                </td>
-                <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {order.User.email}
-                </td>
-                <td className="px-4 py-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      Customer
+                    </p>
+                    <p className="text-xs text-gray-500">{`${order.User?.first_name} ${order.User?.last_name}`}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      ORDER ID
+                    </p>
+                    <p className="text-xs text-gray-500">{order.code}</p>
+                  </div>
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
                       order.status
@@ -611,18 +553,90 @@ const OrdersTable: React.FC<{ orders?: Booking[] }> = ({ orders = [] }) => {
                   >
                     {order.status}
                   </span>
-                </td>
-                <td className="hidden lg:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {dayjs(order.updatedAt).format("YYYY-MM-DD HH:mm")}
-                </td>
-                <td className="hidden xl:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
-                  {`${order.origin} - ${order.destination}`}
-                </td>
-              </tr>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-gray-500">Email</p>
+                    <p>{order.User.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Arrival</p>
+                    <p>{dayjs(order.updatedAt).format("YYYY-MM-DD HH:mm")}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Route</p>
+                    <p>{`${order.origin} - ${order.destination}`}</p>
+                  </div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="min-w-full table-auto divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="min-w-[150px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="min-w-[120px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th className="min-w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="min-w-[100px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="min-w-[160px] hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Arrival
+                  </th>
+                  <th className="min-w-[200px] hidden xl:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Route
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredOrders.map((order, index) => (
+                  <tr
+                    onClick={() =>
+                      router.push(`/user/track-shipment-overview/${order.id}`)
+                    }
+                    key={`${order.id}-${index}`}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                      {`${order.User?.first_name} ${order.User?.last_name}`}
+                    </td>
+                    <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                      {order.code}
+                    </td>
+                    <td className="px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                      {order.User.email}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                          order.status
+                        )}`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="hidden lg:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                      {dayjs(order.updatedAt).format("YYYY-MM-DD HH:mm")}
+                    </td>
+                    <td className="hidden xl:table-cell px-4 py-3 text-xs md:text-sm text-gray-900 break-words">
+                      {`${order.origin} - ${order.destination}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 };

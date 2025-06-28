@@ -4,21 +4,30 @@ import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import Button from "@/components/reuseables/Button";
 
-interface BookingLabel {
+export interface BookingLabel {
   id: string;
-  status: string;
-  courier: string;
-  tracking_codes?: string[];
-  type: string;
-  createdAt: string;
+  booking_id: string;
+  label: string;
+  label_type: "internal" | "external" | string;
+  key: string;
+  status: "created" | "processing" | "failed" | string;
   uri: string;
+  type: "PDF" | "ZPL" | string;
+  courier: string;
+  tracking_codes: string[] | null;
+  tracking_urls: string[] | null;
+  tracking_request_id: string | null;
+  tracking_request_hash: string | null;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
 }
 
 interface ShippingLabelsModalProps {
   isOpen: boolean;
   onClose: () => void;
   labels?: BookingLabel[];
-  onDownloadLabel: (uri: string, labelId: string) => void;
+  onDownloadLabel: (labelId: string) => void;
+  isDownloading?: boolean;
 }
 
 export default function ShippingLabelsModal({
@@ -26,11 +35,11 @@ export default function ShippingLabelsModal({
   onClose,
   labels,
   onDownloadLabel,
+  isDownloading = false,
 }: ShippingLabelsModalProps) {
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog onClose={onClose} className="relative z-50">
-        {/* Background overlay */}
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -43,7 +52,6 @@ export default function ShippingLabelsModal({
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        {/* Modal panel */}
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Transition.Child
             as={Fragment}
@@ -104,11 +112,19 @@ export default function ShippingLabelsModal({
                           </div>
                           <div className="flex items-end">
                             <Button
+                              // onClick={() => onDownloadLabel(label.key)}
                               onClick={() =>
-                                onDownloadLabel(label.uri, label.id)
+                                onDownloadLabel(
+                                  "label-5beb9449-1241-4295-8706-69f2d900ecaa-cc62599f-3e61-4b3c-9c6a-c022d3862ab4.pdf"
+                                )
                               }
-                              title="Download PDF"
+                              title={
+                                isDownloading
+                                  ? "Downloading..."
+                                  : "Download PDF"
+                              }
                               variant="primary"
+                              disabled={isDownloading}
                             />
                           </div>
                         </div>

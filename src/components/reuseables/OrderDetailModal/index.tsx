@@ -1,8 +1,15 @@
 "use client";
 
-import { BookingData, useGetBookingById } from "@/services";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  BookingData,
+  useCreateNote,
+  useGetBookingById,
+  useGetNote,
+} from "@/services";
+import Button from "../Button";
+import { useAlert } from "../Alert/alert-context";
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -15,12 +22,32 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onClose,
   bookingId,
 }) => {
-  const { data, isLoading } = useGetBookingById(bookingId);
+  const router = useRouter();
+  const { showAlert } = useAlert();
+
   const [bookingData, setBookingData] = useState<BookingData | null>(null);
   const [status, setStatus] = useState<string>("");
+  const [notes, setNotes] = useState("");
+
+  const booking = bookingData?.booking;
+  const sender = booking?.senderAddress;
+  const recipient = booking?.recipientAddress;
+
+  const { data, isLoading } = useGetBookingById(bookingId);
+  const { mutate, isPending } = useCreateNote((res) => {
+    if (res?.status === 200) {
+      refetch();
+      showAlert(`${res?.data?.message}`, "success");
+    }
+  });
+
+  const { data: allNotes, refetch } = useGetNote(booking?.id as string);
 
   useEffect(() => {
-    if (data?.data) {
+    if (
+      data?.data &&
+      JSON.stringify(data.data) !== JSON.stringify(bookingData)
+    ) {
       setBookingData(data.data);
       setStatus(
         data.data.booking.BookingTrackers?.[0]?.status ||
@@ -29,25 +56,18 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     }
   }, [data]);
 
+  const handleCreateNote = () => {
+    if (notes.trim()) {
+      mutate({ id: bookingData?.booking?.id as string, note: notes });
+    }
+  };
+
   if (!isOpen) return null;
-
-  const booking = bookingData?.booking;
-  const sender = booking?.senderAddress;
-  const recipient = booking?.recipientAddress;
-
-  const router = useRouter();
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/30 transition-opacity duration-300"
-        onClick={onClose}
-      />
-
-      {/* Modal Panel */}
+      <div className="fixed inset-0 bg-black/30" onClick={onClose} />
       <div className="fixed top-0 right-0 h-full w-full md:w-[600px] bg-white shadow-lg z-50">
-        {/* Modal Header */}
         <div className="p-6 border-b flex justify-between items-center">
           <h2 className="text-lg font-semibold">View Order Processing</h2>
           <button onClick={onClose} className="text-gray-500 text-xl">
@@ -55,13 +75,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="p-6 space-y-6 overflow-y-auto h-[calc(100vh-72px)]">
           {isLoading || !bookingData ? (
             <SkeletonLoading />
           ) : (
             <>
-              {/* Order Info */}
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold">Order #{booking?.code}</h3>
                 <span className="bg-blue-100 text-blue-600 text-sm px-3 py-1 rounded-full">
@@ -69,8 +87,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </span>
               </div>
 
-              {/* Shipping Details */}
-              <div>
+              <section>
                 <h4 className="font-semibold mb-2">Shipping Details</h4>
                 <div className="grid grid-cols-2 gap-4 border rounded-md p-4">
                   <div>
@@ -100,10 +117,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <p>Expected Delivery Date: TBD</p>
                   </div>
                 </div>
-              </div>
+              </section>
 
-              {/* Package Information */}
-              <div>
+              <section>
                 <h4 className="font-semibold mb-2">Package Information</h4>
                 <div className="border rounded-md p-4 grid grid-cols-2 gap-4">
                   <div>
@@ -119,17 +135,16 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <p>{booking?.product_qty}</p>
                   </div>
                 </div>
-              </div>
+              </section>
 
-              {/* Payment Details */}
-              <div>
+              <section>
                 <h4 className="font-semibold mb-2">Payment Details</h4>
                 <div className="border rounded-md p-4 grid grid-cols-2 gap-4">
                   <div>
                     <p className="font-semibold">Company Name</p>
                     <p>Logic Tech Limited</p>
                     <p className="font-semibold mt-2">Account Detail</p>
-                    <p>United Bank for Africa UBA</p>
+                    <p>UBA</p>
                   </div>
                   <div>
                     <p className="font-semibold">Payment Status</p>
@@ -140,10 +155,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <p>829939UR273</p>
                   </div>
                 </div>
-              </div>
+              </section>
 
-              {/* Related Invoice */}
-              <div>
+              <section>
                 <h4 className="font-semibold mb-2">Related Invoice</h4>
                 <div className="border rounded-md p-4">
                   <p>
@@ -153,14 +167,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <span className="font-semibold">Payment Status:</span> Paid
                   </p>
                 </div>
-              </div>
+              </section>
 
-              {/* Schedule Date */}
-              <div>
-                <h4 className="font-semibold mb-2">Schedule Date</h4>
+              <section>
+                <h4 className="font-semibold mb-2">Add Note</h4>
                 <div className="border rounded-md p-4 space-y-4">
-                  {/* Date Inputs */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Start Date:
@@ -193,36 +205,53 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         className="w-full border border-blue-500 rounded-md p-2"
                       />
                     </div>
-                  </div>
+                  </div> */}
 
-                  {/* Notes Textarea */}
                   <div>
                     <label className="block text-sm font-medium text-blue-600 mb-1">
-                      Add Notes<span className="text-red-500">*</span>
+                      Add Notes <span className="text-red-500">*</span>
                     </label>
                     <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
                       placeholder="Input your Notes....."
                       rows={3}
                       className="w-full border rounded-md p-2"
                     />
                   </div>
 
-                  {/* Buttons */}
                   <div className="flex flex-col md:flex-row gap-4 mt-4">
-                    <button
-                      onClick={() =>
-                        router.replace(`/user/tracking-details/${bookingId}`)
-                      }
-                      className="bg-blue-100 text-black px-6 py-2 rounded-full border hover:bg-blue-200 transition"
-                    >
-                      Track Order
-                    </button>
-                    <button className="bg-white text-black px-6 py-2 rounded-full border hover:bg-gray-100 transition">
-                      Notify Customer
-                    </button>
+                    <Button
+                      onClick={handleCreateNote}
+                      title="Create Note"
+                      loading={isPending}
+                    />
                   </div>
                 </div>
-              </div>
+              </section>
+
+              {/* Notes Section */}
+              <section>
+                <h4 className="font-semibold mb-2">Existing Notes</h4>
+                {allNotes?.data && allNotes.data.length > 0 ? (
+                  allNotes.data
+                    .filter((note) => note.booking_id === booking?.id)
+                    .map((note) => (
+                      <div
+                        key={note.id}
+                        className="border rounded-md p-4 bg-gray-50 text-gray-800 mb-4"
+                      >
+                        <p className="mb-1 text-sm">{note.note}</p>
+                        <p className="text-xs text-gray-500">
+                          Created At:{" "}
+                          {new Date(note.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))
+                ) : (
+                  <p className="text-sm text-gray-500">No notes available.</p>
+                )}
+              </section>
             </>
           )}
         </div>

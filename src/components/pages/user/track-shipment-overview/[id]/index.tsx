@@ -6,6 +6,8 @@ import {
   LegDetail,
   useCreateException,
   useCreateLabel,
+  useCreateNote,
+  useDownloadFile,
   useGetBookingById,
   useTriggerAdditionalPayment,
   useValidateException,
@@ -16,15 +18,53 @@ import ExceptionModal from "../components/exception-modal";
 import LegsModal from "../components/leg-detail-modal";
 import PackageInformation from "../components/package-information";
 import ShippingLabelsModal from "../components/shipping-labels-modal";
-
-const Spinner = () => (
-  <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-);
+import OrderDetailsModal from "@/components/reuseables/OrderDetailModal";
 
 export default function TrackingOrderPage() {
   const params = useParams();
   const { data, isPending } = useGetBookingById(params?.id as string);
+  const [currentLabelId, setCurrentLabelId] = useState<string | null>(null);
+  const {
+    data: pdfBlob,
+    error: downloadError,
+    isFetching: isDownloading,
+  } = useDownloadFile(currentLabelId || undefined);
 
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+
+  // Handle PDF download
+  // useEffect(() => {
+  //   if (pdfBlob && currentLabelId) {
+  //     const url = window.URL.createObjectURL(pdfBlob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.setAttribute("download", `shipping-label-${currentLabelId}.pdf`);
+  //     document.body.appendChild(link);
+  //     link.click();
+
+  //     // Cleanup
+  //     setTimeout(() => {
+  //       document.body.removeChild(link);
+  //       window.URL.revokeObjectURL(url);
+  //       setCurrentLabelId(null);
+  //     }, 100);
+  //   }
+  // }, [pdfBlob, currentLabelId]);
+
+  // Handle download errors
+  useEffect(() => {
+    if (downloadError) {
+      console.error("Download error:", downloadError);
+      alert("Failed to download label. Please try again.");
+      setCurrentLabelId(null);
+    }
+  }, [downloadError]);
+
+  const handleDownloadLabel = (labelId: string) => {
+    setCurrentLabelId(labelId);
+  };
+
+  /* ALL YOUR EXISTING STATE AND FUNCTIONS REMAIN EXACTLY THE SAME */
   const [actualValuesMap, setActualValuesMap] = useState<
     Record<string, { weight: string; quantity: string; "unit weight": string }>
   >({});
@@ -54,7 +94,6 @@ export default function TrackingOrderPage() {
   const [open, setOpen] = useState(false);
 
   const booking = data?.data?.booking;
-  const labelId = data?.data?.booking?.BookingLabels[0]?.id;
   const code = booking?.code;
   const sender = booking?.senderAddress;
   const recipient = booking?.recipientAddress;
@@ -63,7 +102,7 @@ export default function TrackingOrderPage() {
     mutate: createLabel,
     isPending: isCreatingLabel,
     data: labelRes,
-    error,
+    error: createLabelError,
   } = useCreateLabel((response) => {
     if (response) {
       alert(`Label Created Successfully`);
@@ -74,7 +113,7 @@ export default function TrackingOrderPage() {
   const { mutate: createException, isPending: isCreatingException } =
     useCreateException();
   const { mutate: triggerPayment, isPending: isTriggeringPayment } =
-    useTriggerAdditionalPayment((res) => console.log(res, "resssszzzzz"));
+    useTriggerAdditionalPayment();
 
   // Initialize actual values and validation status
   useEffect(() => {
@@ -122,16 +161,6 @@ export default function TrackingOrderPage() {
       setValidationStatus((prev) => ({ ...prev, ...initialStatus }));
     }
   }, [booking?.BookingItems]);
-
-  const handleDownloadLabel = (uri: string, labelId: string) => {
-    const a = document.createElement("a");
-    a.href = uri;
-    a.download = `shipping-label-${labelId}.pdf`;
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
 
   const handleItemFieldChange = (
     itemId: string,
@@ -255,8 +284,6 @@ export default function TrackingOrderPage() {
   };
 
   const handleCreateLabel = () => {
-    console.log(booking?.id, labelId);
-
     if (!booking?.id) return;
     createLabel({ labelId: booking?.id });
   };
@@ -343,14 +370,24 @@ export default function TrackingOrderPage() {
                 Pending
               </span>
             </div>
-            <button
-              onClick={() =>
-                router.push(`/user/tracking-details/${params?.id}`)
-              }
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md"
-            >
-              Track Order
-            </button>
+            <div>
+              <button
+                onClick={() =>
+                  router.push(`/user/tracking-details/${params?.id}`)
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md"
+              >
+                Track Order
+              </button>
+              <button
+                onClick={() => {
+                  setDetailsModalOpen(true);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white mx-4 text-sm font-medium px-4 py-2 rounded-md"
+              >
+                View Details
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-lg p-4 mb-6 relative">
             <div>
@@ -376,7 +413,6 @@ export default function TrackingOrderPage() {
                 {recipient?.post_code}
               </p>
               <p>{recipient?.contact_email}</p>
-              {/* <p>Expected Delivery Date: --</p> */}
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium mb-1">
@@ -420,6 +456,7 @@ export default function TrackingOrderPage() {
         onClose={() => setOpen(false)}
         labels={booking?.BookingLabels}
         onDownloadLabel={handleDownloadLabel}
+        isDownloading={isDownloading}
       />
       <ExceptionModal
         isOpen={isExceptionModalOpen}
@@ -437,6 +474,11 @@ export default function TrackingOrderPage() {
         isOpen={isLegsModalOpen}
         closeModal={() => setIsLegsModalOpen(false)}
         legs={legDetails}
+      />
+      <OrderDetailsModal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        bookingId={booking?.id as string}
       />
     </UserDashboardWrapper>
   );

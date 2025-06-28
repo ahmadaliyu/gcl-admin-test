@@ -191,3 +191,16 @@ export interface Service {
   id: string;
   name: string;
 }
+
+export interface BookingNote {
+  id: string;
+  booking_id: string;
+  note: string;
+  type: "booking";
+  createdAt: string; // ISO 8601 date string
+  updatedAt: string;
+}
+export interface BookingNotesResponse {
+  success: boolean;
+  data: BookingNote[];
+}
