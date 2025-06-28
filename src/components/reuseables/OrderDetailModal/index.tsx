@@ -137,7 +137,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </div>
               </section>
 
-              <section>
+              {/* <section>
                 <h4 className="font-semibold mb-2">Payment Details</h4>
                 <div className="border rounded-md p-4 grid grid-cols-2 gap-4">
                   <div>
@@ -155,9 +155,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <p>829939UR273</p>
                   </div>
                 </div>
-              </section>
+              </section> */}
 
-              <section>
+              {/* <section>
                 <h4 className="font-semibold mb-2">Related Invoice</h4>
                 <div className="border rounded-md p-4">
                   <p>
@@ -167,7 +167,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <span className="font-semibold">Payment Status:</span> Paid
                   </p>
                 </div>
-              </section>
+              </section> */}
 
               <section>
                 <h4 className="font-semibold mb-2">Add Note</h4>
