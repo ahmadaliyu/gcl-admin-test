@@ -19,12 +19,9 @@ function Initializers({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthPage = pathname.startsWith("/");
-  const isPublicPage = pathname.startsWith("/public/");
+  const isUserRoute = pathname.startsWith("/user");
   const isRootPage = pathname === "/";
-  const isProtectedRoute = !(isAuthPage || isPublicPage || isRootPage);
-
-  const hideFooter = isAuthPage || pathname.startsWith("/user/");
+  const token = Cookies.get("token");
 
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -36,26 +33,20 @@ function Initializers({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    const token = Cookies.get("token");
     const hasVisited = localStorage.getItem("hasVisited");
 
     if (!hasVisited) {
       localStorage.setItem("hasVisited", "true");
-      // First-time user, redirect to home
-      if (!token && isProtectedRoute) {
-        router.replace("/");
-        return;
-      }
-    } else {
-      // Returning user
-      if (!token && isProtectedRoute) {
-        router.replace("/");
-        return;
-      }
+    }
+
+    // Protect all /user routes
+    if (isUserRoute && !token) {
+      router.replace("/");
+      return;
     }
 
     setIsLoading(false);
-  }, [pathname, isProtectedRoute, router]);
+  }, [pathname, token, router, isUserRoute]);
 
   if (isLoading) {
     return (
@@ -65,6 +56,8 @@ function Initializers({ children }: { children: ReactNode }) {
     );
   }
 
+  const hideFooter = pathname.startsWith("/") || isUserRoute;
+
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -72,7 +65,7 @@ function Initializers({ children }: { children: ReactNode }) {
           <AppThemeProvider>
             <AlertProvider>
               <NextTopLoader color="#000000" height={3} />
-              <Navbar fixed={!pathname.startsWith("/user/")} />
+              <Navbar fixed={!isUserRoute} />
               {children}
               {!hideFooter && <Footer />}
               <Toaster richColors />
