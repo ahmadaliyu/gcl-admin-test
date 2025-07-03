@@ -43,9 +43,11 @@ const statusCommentMap: Record<string, string> = {
 const TrackingDetails = () => {
   const params = useParams();
   const router = useRouter();
-  const { data: bookingData, isPending } = useGetBookingById(
-    params?.id as string
-  );
+  const {
+    data: bookingData,
+    isPending,
+    refetch,
+  } = useGetBookingById(params?.id as string);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState("");
@@ -55,8 +57,7 @@ const TrackingDetails = () => {
 
   const { mutate: updateBookingStatus, isPending: isUpdating } =
     useUpdateBookingStatus((res) => {
-      console.log(res);
-
+      refetch();
       setIsModalOpen(false);
       showAlert("Status updated successfully", "success");
     });

@@ -19,6 +19,7 @@ import LegsModal from "../components/leg-detail-modal";
 import PackageInformation from "../components/package-information";
 import ShippingLabelsModal from "../components/shipping-labels-modal";
 import OrderDetailsModal from "@/components/reuseables/OrderDetailModal";
+import { useAlert } from "@/components/reuseables/Alert/alert-context";
 
 export default function TrackingOrderPage() {
   const params = useParams();
@@ -93,6 +94,8 @@ export default function TrackingOrderPage() {
   const [legDetails, setLegDetails] = useState<LegDetail[]>([]);
   const [open, setOpen] = useState(false);
 
+  const { showAlert } = useAlert();
+
   const booking = data?.data?.booking;
   const code = booking?.code;
   const sender = booking?.senderAddress;
@@ -104,8 +107,8 @@ export default function TrackingOrderPage() {
     data: labelRes,
     error: createLabelError,
   } = useCreateLabel((response) => {
-    if (response) {
-      alert(`Label Created Successfully`);
+    if (response.status === 200) {
+      showAlert(`Label Created Successfully`, "success");
     }
   });
 
@@ -379,14 +382,12 @@ export default function TrackingOrderPage() {
               >
                 Track Order
               </button>
-              <button
-                onClick={() => {
-                  setDetailsModalOpen(true);
-                }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white mx-4 text-sm font-medium px-4 py-2 rounded-md"
+              <span
+                onClick={() => setDetailsModalOpen(true)}
+                className="cursor-pointer underline text-indigo-600 hover:text-indigo-800 text-sm font-medium ml-4"
               >
                 View Details
-              </button>
+              </span>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border rounded-lg p-4 mb-6 relative">
@@ -421,15 +422,15 @@ export default function TrackingOrderPage() {
               <p>{booking?.product_book}</p>
             </div>
             <div className="absolute bottom-4 right-4">
-              <button
+              <span
                 onClick={() => {
                   setLegDetails(booking?.leg_details || []);
                   setIsLegsModalOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md"
+                className="cursor-pointer underline text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
                 View Legs
-              </button>
+              </span>
             </div>
           </div>
           <PackageInformation

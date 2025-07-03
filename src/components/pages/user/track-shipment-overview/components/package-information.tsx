@@ -77,11 +77,7 @@ export default function PackageInformation({
     const status = validationStatus[itemId];
     if (!status || status.status === "pending")
       return "border-gray-300 bg-white";
-    if (
-      status.status === "mismatch" &&
-      status.mismatchedFields?.includes(field)
-    )
-      return "border-red-500 bg-red-50";
+    if (status.status === "mismatch") return "border-red-500 bg-red-50";
     if (status.status === "approved") return "border-green-500 bg-green-50";
     return "border-gray-300";
   };
@@ -94,10 +90,13 @@ export default function PackageInformation({
 
   const getStatusColor = (itemId: string) => {
     const status = validationStatus[itemId];
+
     if (!status || status.status === "pending")
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-gray-100 text-gray-800";
     return status.status === "approved"
       ? "bg-green-100 text-green-800"
+      : status.status === "mismatch"
+      ? "bg-red-100 text-red-800"
       : "bg-red-100 text-red-800";
   };
 
@@ -211,20 +210,15 @@ export default function PackageInformation({
                 Please validate at least one item first
               </div>
             )}
-            {/* <Button
-              title="Return To Sender"
-              variant="outlined"
-              className="w-full md:w-auto"
-            /> */}
           </div>
         )}
 
-        <Button
+        <button
           onClick={onViewLabels}
-          title="View Labels"
-          variant="secondary"
-          className="w-full md:w-auto"
-        />
+          className="text-blue-600 underline text-sm font-medium"
+        >
+          View Labels
+        </button>
       </div>
     </div>
   );
