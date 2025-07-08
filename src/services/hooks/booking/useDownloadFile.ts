@@ -1,4 +1,4 @@
-import { get } from "@/services/apiServices";
+import { get, getFile } from "@/services/apiServices";
 import { useQuery } from "@tanstack/react-query";
 
 export const useDownloadFile = (key?: string) => {
@@ -7,18 +7,13 @@ export const useDownloadFile = (key?: string) => {
     queryFn: async (): Promise<Blob> => {
       if (!key) throw new Error("Label ID is required");
 
-      const response = await get(`auth/download/labels/${key}`, {
-        responseType: "blob",
+      const response = await getFile(`auth/download/labels/${key}`, {
         headers: {
           Accept: "*/*",
         },
       });
 
-      //   if (!(response.data instanceof Blob)) {
-      //     throw new Error("Invalid response format");
-      //   }
-
-      return response;
+      return response.data; // Axios puts blob in `.data`
     },
     enabled: !!key,
     refetchOnWindowFocus: false,

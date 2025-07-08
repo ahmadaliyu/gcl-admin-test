@@ -478,6 +478,7 @@ const OrdersTable: React.FC<{ orders?: Booking[] }> = ({ orders = [] }) => {
 
   const filteredOrders = useMemo<Booking[]>(() => {
     const today = dayjs().startOf("day");
+
     return orders
       .filter((order) => {
         const updatedDate = dayjs(order.updatedAt);
@@ -492,7 +493,8 @@ const OrdersTable: React.FC<{ orders?: Booking[] }> = ({ orders = [] }) => {
             .toLowerCase()
             .includes(searchLower)
         );
-      });
+      })
+      .sort((a, b) => dayjs(a.updatedAt).unix() - dayjs(b.updatedAt).unix()); // oldest first
   }, [search, orders]);
 
   return (

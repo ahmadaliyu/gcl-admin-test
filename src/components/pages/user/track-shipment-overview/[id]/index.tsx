@@ -62,6 +62,8 @@ export default function TrackingOrderPage() {
   }, [downloadError]);
 
   const handleDownloadLabel = (labelId: string) => {
+    console.log(labelId);
+
     setCurrentLabelId(labelId);
   };
 
@@ -455,7 +457,7 @@ export default function TrackingOrderPage() {
       <ShippingLabelsModal
         isOpen={open}
         onClose={() => setOpen(false)}
-        labels={booking?.BookingLabels}
+        labels={booking?.BookingLabels as any}
         onDownloadLabel={handleDownloadLabel}
         isDownloading={isDownloading}
       />

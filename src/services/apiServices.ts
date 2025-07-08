@@ -177,6 +177,22 @@ export const Delete = async (url: string) => {
   }
 };
 
+export const getFile = (url: string, config = {}) => {
+  const isPublicFile = url.includes("/auth/download/labels/");
+
+  if (isPublicFile) {
+    return rawAxios.get(url, {
+      responseType: "blob",
+      ...config,
+    });
+  }
+
+  return service.get(url, {
+    responseType: "blob",
+    ...config,
+  });
+};
+
 // Error handler
 function handleError(error: any) {
   if (error?.response?.status === 403 || error?.response?.status === 401) {

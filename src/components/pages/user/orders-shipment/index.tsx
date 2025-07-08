@@ -25,8 +25,9 @@ function OrdersShipment() {
   const orders = useMemo(() => data?.data?.bookings || [], [data]);
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const searchLower = search.toLowerCase();
+    const searchLower = search.toLowerCase();
+
+    const filtered = orders.filter((order) => {
       const matchesSearch =
         order.code.toLowerCase().includes(searchLower) ||
         order.status.toLowerCase().includes(searchLower) ||
@@ -53,6 +54,11 @@ function OrdersShipment() {
 
       return matchesSearch && matchesStatus && matchesDate;
     });
+
+    // Sort by updatedAt ascending (older first, newer last)
+    return filtered.sort(
+      (a, b) => dayjs(a.updatedAt).valueOf() - dayjs(b.updatedAt).valueOf()
+    );
   }, [orders, search, statusFilter, dateFilter]);
 
   if (isLoading) return <DashboardSkeleton />;
