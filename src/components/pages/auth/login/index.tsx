@@ -24,8 +24,6 @@ function LoginPage() {
   let quote = params.get("quote");
 
   const { isPending, mutate } = useSignIn((response: LoginResponse) => {
-    console.log(response?.status, 99999);
-
     if (response?.status === 200) {
       const user = response?.data?.data?.user;
       dispatch(setUser(user));
