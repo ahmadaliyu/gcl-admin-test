@@ -1,9 +1,11 @@
 import UserDashboardWrapper from "@/components/layout/user/user-dashboard-wrapper";
 import { useAlert } from "@/components/reuseables/Alert/alert-context";
+import { useUploadFile } from "@/services";
 import {
   ImportData,
   useDeleteCustomClearance,
   useGetCustomClearance,
+  useUpdateCustomClearanceStatus,
 } from "@/services/hooks/user";
 import React, { useState } from "react";
 
@@ -11,10 +13,21 @@ function AdminCustomClearance() {
   const { data, isPending, refetch } = useGetCustomClearance();
   const { mutate: deleteClearance, isPending: deleting } =
     useDeleteCustomClearance();
+  const { mutate: updateStatus, isPending: updatingStatus } =
+    useUpdateCustomClearanceStatus();
+  const { mutate: uploadFile, isPending: uploading } = useUploadFile();
+
   const [selectedClearance, setSelectedClearance] = useState<ImportData | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<"approved" | "rejected">(
+    "approved"
+  );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const { showAlert } = useAlert();
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -31,8 +44,6 @@ function AdminCustomClearance() {
     }
   };
 
-  const { showAlert } = useAlert();
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -46,6 +57,87 @@ function AdminCustomClearance() {
   const handleViewDetails = (clearance: ImportData) => {
     setSelectedClearance(clearance);
     setIsModalOpen(true);
+  };
+
+  const handleOpenStatusModal = (clearance: ImportData) => {
+    setSelectedClearance(clearance);
+    setSelectedStatus(clearance.status as "approved" | "rejected");
+    setSelectedFile(null);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleStatusUpdate = () => {
+    if (!selectedClearance) return;
+
+    if (selectedFile) {
+      // Upload file first, then update status
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      uploadFile(
+        { payload: formData },
+        {
+          onSuccess: (uploadResponse) => {
+            console.log(uploadResponse.data.data, "hfhfhfhjfjjfj");
+
+            // After successful upload, update status with file data
+            updateStatus(
+              {
+                id: selectedClearance.id,
+                payload: {
+                  status: selectedStatus,
+                  data: uploadResponse.data.data,
+                },
+              },
+              {
+                onSuccess: (res) => {
+                  refetch();
+                  showAlert("Status updated successfully with file", "success");
+                  setIsStatusModalOpen(false);
+                  setSelectedClearance(null);
+                  setSelectedFile(null);
+                },
+                onError: (error) => {
+                  showAlert(
+                    `${error.message}` || "Failed to update status",
+                    "error"
+                  );
+                },
+              }
+            );
+          },
+          onError: () => {
+            showAlert("File upload failed", "error");
+          },
+        }
+      );
+    } else {
+      // Update status without file
+      // updateStatus(
+      //   {
+      //     id: selectedClearance.id,
+      //     payload: { status: selectedStatus },
+      //   },
+      //   {
+      //     onSuccess: () => {
+      //       refetch();
+      //       showAlert("Status updated successfully", "success");
+      //       setIsStatusModalOpen(false);
+      //       setSelectedClearance(null);
+      //     },
+      //     onError: (error) => {
+      //       showAlert("Failed to update status", "error");
+      //     },
+      //   }
+      // );
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -64,7 +156,9 @@ function AdminCustomClearance() {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setIsStatusModalOpen(false);
     setSelectedClearance(null);
+    setSelectedFile(null);
   };
 
   if (isPending) {
@@ -102,9 +196,6 @@ function AdminCustomClearance() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Request ID
-                      </th> */}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Customer
                       </th>
@@ -128,11 +219,6 @@ function AdminCustomClearance() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {clearances.map((clearance) => (
                       <tr key={clearance.id} className="hover:bg-gray-50">
-                        {/* <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {clearance.id.slice(0, 8)}...
-                          </div>
-                        </td> */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
@@ -182,10 +268,10 @@ function AdminCustomClearance() {
                             View
                           </button>
                           {/* <button
-                            onClick={() => handleDelete(clearance.id)}
-                            className="text-red-600 hover:text-red-900"
+                            onClick={() => handleOpenStatusModal(clearance)}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
                           >
-                            Delete
+                            Update Status
                           </button> */}
                         </td>
                       </tr>
@@ -318,10 +404,135 @@ function AdminCustomClearance() {
                 {deleting ? "Deleting..." : "Delete Request"}
               </button>
               <button
+                onClick={() => handleOpenStatusModal(selectedClearance)}
+                className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              >
+                Update Status
+              </button>
+              <button
                 onClick={closeModal}
                 className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for updating status */}
+      {isStatusModalOpen && selectedClearance && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Update Clearance Status
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Current Status
+                </h4>
+                <span
+                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                    selectedClearance.status
+                  )}`}
+                >
+                  {selectedClearance.status}
+                </span>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Update Status
+                </h4>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) =>
+                    setSelectedStatus(e.target.value as "approved" | "rejected")
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {/* <option value="processing">Processing</option> */}
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Upload Document (Optional)
+                </h4>
+                <input
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                />
+                {selectedFile && (
+                  <p className="mt-2 text-sm text-green-600">
+                    Selected: {selectedFile.name}
+                  </p>
+                )}
+              </div>
+
+              {selectedStatus === "rejected" && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-yellow-700">
+                        <strong>Note:</strong> Rejecting this request will
+                        notify the customer and prevent further processing.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedStatus === "approved" && (
+                <div className="bg-green-50 border-l-4 border-green-400 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-green-700">
+                        <strong>Note:</strong> Approving this request will
+                        notify the customer and complete the clearance process.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b">
+              <button
+                onClick={handleStatusUpdate}
+                disabled={updatingStatus || uploading}
+                className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updatingStatus || uploading ? "Updating..." : "Update Status"}
+              </button>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -347,7 +558,7 @@ function ClearanceSkeleton() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {[...Array(7)].map((_, i) => (
+                    {[...Array(6)].map((_, i) => (
                       <th key={i} className="px-6 py-3">
                         <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
                       </th>
@@ -357,7 +568,7 @@ function ClearanceSkeleton() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {[...Array(5)].map((_, rowIndex) => (
                     <tr key={rowIndex}>
-                      {[...Array(7)].map((_, cellIndex) => (
+                      {[...Array(6)].map((_, cellIndex) => (
                         <td key={cellIndex} className="px-6 py-4">
                           <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
                         </td>

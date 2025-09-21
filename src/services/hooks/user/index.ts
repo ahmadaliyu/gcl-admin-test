@@ -5,3 +5,4 @@ export * from "./useUpdateAddress";
 export * from "./useGetCustomClearance";
 export * from "./useGetClearanceById";
 export * from "./useDeleteClearance";
+export * from "./useUpdateCustomClearanceStatus";
