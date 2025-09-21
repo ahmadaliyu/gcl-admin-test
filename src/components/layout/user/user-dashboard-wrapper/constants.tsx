@@ -128,6 +128,46 @@ export const menus = [
     ),
     link: "/user/service-management",
   },
+  {
+    title: "Custom Clearance",
+    leftIconActive: (
+      <svg
+        width="40"
+        height="40"
+        viewBox="0 0 40 40"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect width="40" height="40" rx="20" fill="#F28A8F" />
+        <path
+          d="M15 25H25M15 20H25M15 15H25M12 28H28C28.5304 28 29.0391 27.7893 29.4142 27.4142C29.7893 27.0391 30 26.5304 30 26V14C30 13.4696 29.7893 12.9609 29.4142 12.5858C29.0391 12.2107 28.5304 12 28 12H12C11.4696 12 10.9609 12.2107 10.5858 12.5858C10.2107 12.9609 10 13.4696 10 14V26C10 26.5304 10.2107 27.0391 10.5858 27.4142C10.9609 27.7893 11.4696 28 12 28Z"
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    leftIconInActive: (
+      <svg
+        width="40"
+        height="40"
+        viewBox="0 0 40 40"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect width="40" height="40" rx="20" fill="#272727" />
+        <path
+          d="M15 25H25M15 20H25M15 15H25M12 28H28C28.5304 28 29.0391 27.7893 29.4142 27.4142C29.7893 27.0391 30 26.5304 30 26V14C30 13.4696 29.7893 12.9609 29.4142 12.5858C29.0391 12.2107 28.5304 12 28 12H12C11.4696 12 10.9609 12.2107 10.5858 12.5858C10.2107 12.9609 10 13.4696 10 14V26C10 26.5304 10.2107 27.0391 10.5858 27.4142C10.9609 27.7893 11.4696 28 12 28Z"
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    link: "/user/custom-clearance",
+  },
 
   {
     title: "",

@@ -14,3 +14,27 @@ export interface AddressFormData {
   is_default: boolean;
   country_iso: string;
 }
+
+export interface ImportData {
+  id: string;
+  user_id: string;
+  type: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  no_of_items: number;
+  address: string;
+  description: string;
+  status: string;
+  meta: any | null;
+  created_at: string;
+  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImportResponse {
+  success: boolean;
+  data: ImportData[];
+}
