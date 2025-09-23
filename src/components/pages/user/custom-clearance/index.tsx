@@ -62,10 +62,16 @@ function AdminCustomClearance() {
     setSelectedClearance(clearance);
     setIsModalOpen(true);
   };
-
   const handleOpenStatusModal = (clearance: ImportData) => {
     setSelectedClearance(clearance);
-    setSelectedStatus(clearance.status as "approved" | "rejected");
+
+    // Only allow "approved" or "rejected" in the dropdown
+    const normalizedStatus =
+      clearance.status === "approved" || clearance.status === "rejected"
+        ? clearance.status
+        : "approved";
+
+    setSelectedStatus(normalizedStatus);
     setSelectedFile(null);
     setFileName("");
     setUploadedFiles([]);
@@ -127,6 +133,15 @@ function AdminCustomClearance() {
 
   const handleStatusUpdate = () => {
     if (!selectedClearance) return;
+    console.log(
+      {
+        payload: {
+          status: selectedStatus,
+          ...(uploadedFiles.length > 0 && { files: uploadedFiles }),
+        },
+      },
+      "the payload"
+    );
 
     updateStatus(
       {
