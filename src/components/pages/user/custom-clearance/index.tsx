@@ -26,6 +26,10 @@ function AdminCustomClearance() {
     "approved"
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<
+    Array<{ name: string; filePath: string }>
+  >([]);
 
   const { showAlert } = useAlert();
 
@@ -63,6 +67,8 @@ function AdminCustomClearance() {
     setSelectedClearance(clearance);
     setSelectedStatus(clearance.status as "approved" | "rejected");
     setSelectedFile(null);
+    setFileName("");
+    setUploadedFiles([]);
     setIsStatusModalOpen(true);
   };
 
@@ -70,74 +76,84 @@ function AdminCustomClearance() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      // Set default name as filename without extension
+      const nameWithoutExt = file.name.split(".").slice(0, -1).join(".");
+      setFileName(nameWithoutExt);
     }
+  };
+
+  const handleUploadFile = () => {
+    if (!selectedFile || !fileName.trim()) {
+      showAlert("Please select a file and enter a name", "warning");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    uploadFile(
+      { payload: formData },
+      {
+        onSuccess: (uploadResponse) => {
+          // Assuming the API returns data in the format you need
+          // Adjust this based on your actual API response structure
+          const fileData = uploadResponse.data.data;
+
+          // Create the file object - make sure we're extracting the correct properties
+          const newFile = {
+            name: fileName.trim(),
+            filePath:
+              fileData.filePath ||
+              fileData.url ||
+              fileData.path ||
+              "File uploaded successfully",
+          };
+
+          setUploadedFiles((prev) => [...prev, newFile]);
+          setSelectedFile(null);
+          setFileName("");
+          showAlert("File uploaded successfully", "success");
+        },
+        onError: (error) => {
+          showAlert("File upload failed", "error");
+        },
+      }
+    );
+  };
+
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleStatusUpdate = () => {
     if (!selectedClearance) return;
 
-    if (selectedFile) {
-      // Upload file first, then update status
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      uploadFile(
-        { payload: formData },
-        {
-          onSuccess: (uploadResponse) => {
-            console.log(uploadResponse.data.data, "hfhfhfhjfjjfj");
-
-            // After successful upload, update status with file data
-            updateStatus(
-              {
-                id: selectedClearance.id,
-                payload: {
-                  status: selectedStatus,
-                  data: uploadResponse.data.data,
-                },
-              },
-              {
-                onSuccess: (res) => {
-                  refetch();
-                  showAlert("Status updated successfully with file", "success");
-                  setIsStatusModalOpen(false);
-                  setSelectedClearance(null);
-                  setSelectedFile(null);
-                },
-                onError: (error) => {
-                  showAlert(
-                    `${error.message}` || "Failed to update status",
-                    "error"
-                  );
-                },
-              }
-            );
-          },
-          onError: () => {
-            showAlert("File upload failed", "error");
-          },
-        }
-      );
-    } else {
-      // Update status without file
-      // updateStatus(
-      //   {
-      //     id: selectedClearance.id,
-      //     payload: { status: selectedStatus },
-      //   },
-      //   {
-      //     onSuccess: () => {
-      //       refetch();
-      //       showAlert("Status updated successfully", "success");
-      //       setIsStatusModalOpen(false);
-      //       setSelectedClearance(null);
-      //     },
-      //     onError: (error) => {
-      //       showAlert("Failed to update status", "error");
-      //     },
-      //   }
-      // );
-    }
+    updateStatus(
+      {
+        id: selectedClearance.id,
+        payload: {
+          status: selectedStatus,
+          ...(uploadedFiles.length > 0 && { files: uploadedFiles }),
+        },
+      },
+      {
+        onSuccess: () => {
+          refetch();
+          showAlert(
+            uploadedFiles.length > 0
+              ? "Status updated successfully with files"
+              : "Status updated successfully",
+            "success"
+          );
+          setIsStatusModalOpen(false);
+          setSelectedClearance(null);
+          setUploadedFiles([]);
+        },
+        onError: (error) => {
+          showAlert(`${error.message}` || "Failed to update status", "error");
+        },
+      }
+    );
   };
 
   const handleDelete = (id: string) => {
@@ -159,6 +175,8 @@ function AdminCustomClearance() {
     setIsStatusModalOpen(false);
     setSelectedClearance(null);
     setSelectedFile(null);
+    setFileName("");
+    setUploadedFiles([]);
   };
 
   if (isPending) {
@@ -267,12 +285,6 @@ function AdminCustomClearance() {
                           >
                             View
                           </button>
-                          {/* <button
-                            onClick={() => handleOpenStatusModal(clearance)}
-                            className="text-blue-600 hover:text-blue-900 mr-4"
-                          >
-                            Update Status
-                          </button> */}
                         </td>
                       </tr>
                     ))}
@@ -420,11 +432,11 @@ function AdminCustomClearance() {
         </div>
       )}
 
-      {/* Modal for updating status */}
+      {/* Modal for updating status with file upload */}
       {isStatusModalOpen && selectedClearance && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="flex items-center justify-between p-4 border-b">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <h3 className="text-xl font-semibold text-gray-900">
                 Update Clearance Status
               </h3>
@@ -446,54 +458,142 @@ function AdminCustomClearance() {
                 </svg>
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Current Status
-                </h4>
-                <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                    selectedClearance.status
-                  )}`}
-                >
-                  {selectedClearance.status}
-                </span>
+
+            <div className="p-6 space-y-6">
+              {/* Current Status */}
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">
+                    Current Status
+                  </h4>
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                      selectedClearance.status
+                    )}`}
+                  >
+                    {selectedClearance.status}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">
+                    Update Status
+                  </h4>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) =>
+                      setSelectedStatus(
+                        e.target.value as "approved" | "rejected"
+                      )
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Update Status
+              {/* File Upload Section */}
+              <div className="border-t pt-6">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Upload Supporting Documents
                 </h4>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) =>
-                    setSelectedStatus(e.target.value as "approved" | "rejected")
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {/* <option value="processing">Processing</option> */}
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Upload Document (Optional)
-                </h4>
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                />
-                {selectedFile && (
-                  <p className="mt-2 text-sm text-green-600">
-                    Selected: {selectedFile.name}
-                  </p>
+                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select File
+                      </label>
+                      <input
+                        type="file"
+                        onChange={handleFileSelect}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                      />
+                      {selectedFile && (
+                        <p className="mt-2 text-sm text-green-600">
+                          Selected: {selectedFile.name} (
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        File Name (e.g., Identification, Certificate)
+                      </label>
+                      <input
+                        type="text"
+                        value={fileName}
+                        onChange={(e) => setFileName(e.target.value)}
+                        placeholder="Enter file name"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleUploadFile}
+                    disabled={!selectedFile || !fileName.trim() || uploading}
+                    className="mt-4 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? "Uploading..." : "Upload File"}
+                  </button>
+                </div>
+
+                {/* Uploaded Files Display */}
+                {uploadedFiles.length > 0 && (
+                  <div>
+                    <h5 className="text-md font-medium text-gray-900 mb-3">
+                      Uploaded Files ({uploadedFiles.length})
+                    </h5>
+                    <div className="space-y-3">
+                      {uploadedFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
+                        >
+                          <div className="flex items-center">
+                            <svg
+                              className="w-5 h-5 text-green-500 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">
+                                {file.name}
+                              </span>
+                              <p className="text-xs text-gray-500 truncate max-w-xs">
+                                {typeof file.filePath === "string"
+                                  ? file.filePath
+                                  : "File uploaded successfully"}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeUploadedFile(index)}
+                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
 
+              {/* Status Update Notes */}
               {selectedStatus === "rejected" && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                   <div className="flex">
@@ -514,19 +614,22 @@ function AdminCustomClearance() {
                       <p className="text-sm text-green-700">
                         <strong>Note:</strong> Approving this request will
                         notify the customer and complete the clearance process.
+                        {uploadedFiles.length > 0 &&
+                          " Uploaded files will be included with the update."}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
             </div>
+
             <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b">
               <button
                 onClick={handleStatusUpdate}
-                disabled={updatingStatus || uploading}
+                disabled={updatingStatus}
                 className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {updatingStatus || uploading ? "Updating..." : "Update Status"}
+                {updatingStatus ? "Updating..." : "Update Status"}
               </button>
               <button
                 onClick={closeModal}
@@ -542,7 +645,7 @@ function AdminCustomClearance() {
   );
 }
 
-// Skeleton Loading Component
+// Skeleton Loading Component (unchanged)
 function ClearanceSkeleton() {
   return (
     <UserDashboardWrapper>
