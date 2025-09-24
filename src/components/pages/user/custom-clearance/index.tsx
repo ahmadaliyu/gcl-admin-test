@@ -62,6 +62,7 @@ function AdminCustomClearance() {
     setSelectedClearance(clearance);
     setIsModalOpen(true);
   };
+
   const handleOpenStatusModal = (clearance: ImportData) => {
     setSelectedClearance(clearance);
 
@@ -101,11 +102,8 @@ function AdminCustomClearance() {
       { payload: formData },
       {
         onSuccess: (uploadResponse) => {
-          // Assuming the API returns data in the format you need
-          // Adjust this based on your actual API response structure
           const fileData = uploadResponse.data.data;
 
-          // Create the file object - make sure we're extracting the correct properties
           const newFile = {
             name: fileName.trim(),
             filePath:
@@ -118,6 +116,13 @@ function AdminCustomClearance() {
           setUploadedFiles((prev) => [...prev, newFile]);
           setSelectedFile(null);
           setFileName("");
+          // Clear the file input
+          const fileInput = document.querySelector(
+            'input[type="file"]'
+          ) as HTMLInputElement;
+          if (fileInput) {
+            fileInput.value = "";
+          }
           showAlert("File uploaded successfully", "success");
         },
         onError: (error) => {
@@ -133,15 +138,6 @@ function AdminCustomClearance() {
 
   const handleStatusUpdate = () => {
     if (!selectedClearance) return;
-    console.log(
-      {
-        payload: {
-          status: selectedStatus,
-          ...(uploadedFiles.length > 0 && { files: uploadedFiles }),
-        },
-      },
-      "the payload"
-    );
 
     updateStatus(
       {
@@ -192,6 +188,57 @@ function AdminCustomClearance() {
     setSelectedFile(null);
     setFileName("");
     setUploadedFiles([]);
+  };
+
+  // Function to render files from meta
+  const renderFiles = (clearance: ImportData) => {
+    if (
+      !clearance.meta ||
+      !clearance.meta.files ||
+      clearance.meta.files.length === 0
+    ) {
+      return (
+        <div className="text-sm text-gray-500 italic">No files uploaded</div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {clearance.meta.files.map((file, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+          >
+            <div className="flex items-center">
+              <svg
+                className="w-4 h-4 text-gray-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-gray-700">
+                {file.name}
+              </span>
+            </div>
+            {/* <a
+              href={file.filePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              View File
+            </a> */}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (isPending) {
@@ -277,7 +324,7 @@ function AdminCustomClearance() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {clearance.no_of_items}
+                            {clearance.meta?.files.length}
                           </div>
                           <div className="text-sm text-gray-500">items</div>
                         </td>
@@ -390,7 +437,7 @@ function AdminCustomClearance() {
                     Number of Items
                   </h4>
                   <p className="mt-1 text-sm text-gray-900">
-                    {selectedClearance.no_of_items}
+                    {selectedClearance.meta?.files.length || 0}
                   </p>
                 </div>
               </div>
@@ -402,6 +449,14 @@ function AdminCustomClearance() {
                 <p className="mt-1 text-sm text-gray-900">
                   {selectedClearance.description || "No description provided"}
                 </p>
+              </div>
+
+              {/* Files Section */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Attached Files
+                </h4>
+                {renderFiles(selectedClearance)}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -641,7 +696,9 @@ function AdminCustomClearance() {
             <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b">
               <button
                 onClick={handleStatusUpdate}
-                disabled={updatingStatus}
+                disabled={
+                  updatingStatus || selectedStatus === selectedClearance.status
+                }
                 className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updatingStatus ? "Updating..." : "Update Status"}

@@ -15,6 +15,16 @@ export interface AddressFormData {
   country_iso: string;
 }
 
+export interface ImportMetaFile {
+  name: string;
+  filePath: string;
+}
+
+export interface ImportMeta {
+  status: string;
+  files: ImportMetaFile[];
+}
+
 export interface ImportData {
   id: string;
   user_id: string;
@@ -27,7 +37,7 @@ export interface ImportData {
   address: string;
   description: string;
   status: string;
-  meta: any | null;
+  meta: ImportMeta | null;
   created_at: string;
   updated_at: string;
   createdAt: string;
