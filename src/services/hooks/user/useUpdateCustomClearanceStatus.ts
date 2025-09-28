@@ -2,7 +2,11 @@ import { patch } from "@/services/apiServices";
 import { useMutation } from "@tanstack/react-query";
 
 interface UpdateStatusPayload {
-  status: "approved" | "processing" | "rejected";
+  status:
+    | "in-review"
+    | "in-progress"
+    | "additional-information"
+    | "custom-cleared";
   data?: {
     fileName: string;
     filePath: string;

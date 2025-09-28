@@ -17,14 +17,16 @@ function AdminCustomClearance() {
     useUpdateCustomClearanceStatus();
   const { mutate: uploadFile, isPending: uploading } = useUploadFile();
 
+  console.log(data?.data, "Clearance Data");
+
   const [selectedClearance, setSelectedClearance] = useState<ImportData | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<"approved" | "rejected">(
-    "approved"
-  );
+  const [selectedStatus, setSelectedStatus] = useState<
+    "in-review" | "in-progress" | "additional-information" | "custom-cleared"
+  >("in-review");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<
@@ -35,14 +37,16 @@ function AdminCustomClearance() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "pending":
+      case "in-review":
+        return "bg-blue-100 text-blue-800";
+      case "in-progress":
         return "bg-yellow-100 text-yellow-800";
-      case "approved":
+      case "additional-information":
+        return "bg-orange-100 text-orange-800";
+      case "custom-cleared":
         return "bg-green-100 text-green-800";
       case "rejected":
         return "bg-red-100 text-red-800";
-      case "processing":
-        return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -66,11 +70,14 @@ function AdminCustomClearance() {
   const handleOpenStatusModal = (clearance: ImportData) => {
     setSelectedClearance(clearance);
 
-    // Only allow "approved" or "rejected" in the dropdown
+    // Set the current status or default to "in-review"
     const normalizedStatus =
-      clearance.status === "approved" || clearance.status === "rejected"
+      clearance.status === "in-review" ||
+      clearance.status === "in-progress" ||
+      clearance.status === "additional-information" ||
+      clearance.status === "custom-cleared"
         ? clearance.status
-        : "approved";
+        : "in-review";
 
     setSelectedStatus(normalizedStatus);
     setSelectedFile(null);
@@ -227,14 +234,6 @@ function AdminCustomClearance() {
                 {file.name}
               </span>
             </div>
-            {/* <a
-              href={file.filePath}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              View File
-            </a> */}
           </div>
         ))}
       </div>
@@ -553,13 +552,21 @@ function AdminCustomClearance() {
                     value={selectedStatus}
                     onChange={(e) =>
                       setSelectedStatus(
-                        e.target.value as "approved" | "rejected"
+                        e.target.value as
+                          | "in-review"
+                          | "in-progress"
+                          | "additional-information"
+                          | "custom-cleared"
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="in-review">In Review</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="additional-information">
+                      Additional Information Required
+                    </option>
+                    <option value="custom-cleared">Custom Cleared</option>
                   </select>
                 </div>
               </div>
@@ -664,28 +671,59 @@ function AdminCustomClearance() {
               </div>
 
               {/* Status Update Notes */}
-              {selectedStatus === "rejected" && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+              {selectedStatus === "additional-information" && (
+                <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
                   <div className="flex">
                     <div className="ml-3">
-                      <p className="text-sm text-yellow-700">
-                        <strong>Note:</strong> Rejecting this request will
-                        notify the customer and prevent further processing.
+                      <p className="text-sm text-orange-700">
+                        <strong>Note:</strong> Setting status to "Additional
+                        Information Required" will notify the customer that more
+                        documents or information are needed to process their
+                        request.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {selectedStatus === "approved" && (
+              {selectedStatus === "custom-cleared" && (
                 <div className="bg-green-50 border-l-4 border-green-400 p-4">
                   <div className="flex">
                     <div className="ml-3">
                       <p className="text-sm text-green-700">
-                        <strong>Note:</strong> Approving this request will
-                        notify the customer and complete the clearance process.
+                        <strong>Note:</strong> Setting status to "Custom
+                        Cleared" will notify the customer that their clearance
+                        has been completed successfully.
                         {uploadedFiles.length > 0 &&
                           " Uploaded files will be included with the update."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedStatus === "in-progress" && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-yellow-700">
+                        <strong>Note:</strong> Setting status to "In Progress"
+                        will notify the customer that their request is currently
+                        being processed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedStatus === "in-review" && (
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-blue-700">
+                        <strong>Note:</strong> Setting status to "In Review"
+                        will notify the customer that their documents are under
+                        review.
                       </p>
                     </div>
                   </div>
