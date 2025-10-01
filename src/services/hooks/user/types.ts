@@ -26,6 +26,7 @@ export interface ImportMeta {
 }
 
 export interface ImportData {
+  waybil_doc: string;
   id: string;
   user_id: string;
   type: string;

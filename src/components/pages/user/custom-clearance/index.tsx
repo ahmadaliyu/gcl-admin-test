@@ -22,6 +22,8 @@ function AdminCustomClearance() {
     useUpdateCustomClearanceStatus();
   const { mutate: uploadFile, isPending: uploading } = useUploadFile();
 
+  console.log(data?.data, "clearance data");
+
   const [selectedClearance, setSelectedClearance] = useState<ImportData | null>(
     null
   );

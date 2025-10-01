@@ -94,7 +94,7 @@ const ClearanceTable: React.FC<ClearanceTableProps> = ({
                 Type
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Items
+                Item(s)
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -134,9 +134,10 @@ const ClearanceTable: React.FC<ClearanceTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {getFilesCount(clearance)}
+                    {/* {getFilesCount(clearance)} */}
+                    {clearance.no_of_items}
                   </div>
-                  <div className="text-sm text-gray-500">items</div>
+                  {/* <div className="text-sm text-gray-500">items</div> */}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span

@@ -155,7 +155,10 @@ const ClearanceDetailsModal: React.FC<ClearanceDetailsModalProps> = ({
               <h4 className="text-sm font-medium text-gray-500">
                 Number of Items
               </h4>
-              <p className="mt-1 text-sm text-gray-900">{getFiles().length}</p>
+              {/* <p className="mt-1 text-sm text-gray-900">{getFiles().length}</p> */}
+              <p className="mt-1 text-sm text-gray-900">
+                {clearance.no_of_items}
+              </p>
             </div>
           </div>
 
@@ -168,7 +171,32 @@ const ClearanceDetailsModal: React.FC<ClearanceDetailsModalProps> = ({
 
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-2">
-              Attached Files
+              Waybill Document
+            </h4>
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+              <div className="flex items-center">
+                <svg
+                  className="w-4 h-4 text-gray-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-gray-700">
+                  {clearance.waybil_doc}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-500 mb-2">
+              Additional Files
             </h4>
             {renderFiles()}
           </div>
